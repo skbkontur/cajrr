@@ -14,4 +14,5 @@ deploy:
     secure: uc1I/BLtWNPHXJWFgX6acy9uhIxVvsWA2VgCOqk1pwedBtW+xwXMAbVsFxvwvcJQWcVdsFMduCzSTmfxEke7HkMCf/95vAlsqdnt3dpAFljxmC8fq2/SAbjolbMQviS0Yn5ft95PkHOj5Z4kXnd/OUclfTx9VD7sGho7bvpeT+V8JRAoZD9qHICp7B2ccOzIbg1G9uGladjCBmdvbAP4miZpDsgqG1vqN18EmIMFoblykJBu+MKJ0sg9+AMeFvjKITieoYz30ma+D3gRnJVxDIUyFKAZUgXLOPPpLcKN9EYAhWwkZPErSQYx6Ztt8cYj3nNvvbZMHcXS3XJKrMnhAoYwAQAlCg+vx2U58dmRzJNEEMfiSm9zRYChL+gggh/Dcams/A/0NiOYKEAU8nPhYI99fKaxD56bv6Mig39M+B4idckv7SJGyxyVDsToMKRgJh3eKrEcHUynH4uGgJYa9M9xAt/WA2+KUAd19Di+YAtMxC7fWqrrFsQdATza30tY0bNxir6nOhBp92DsxhUY2i8boIw+hhdFyttWqeEMzmkWQS8ebRtoUAyrQadR4QkDZ/9cOkVZ9CgB4vnKKiZmHQjfTobL1H9HhuSj5NG7eO9YCcbkwNpEGvzrK7a1EhvFRMPK1hui0hZlqgyL9a/dilpHxgF9ZKeWFGHa+I9D3hU=
   on:
     repo: melnikk/cajrr
-  file: "${ARTIFACT}"
+  file:
+    - "${ARTIFACT}"

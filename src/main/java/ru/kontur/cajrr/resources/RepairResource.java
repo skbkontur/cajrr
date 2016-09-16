@@ -1,14 +1,19 @@
 package ru.kontur.cajrr.resources;
 
-import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Optional;
+import ru.kontur.cajrr.AppContext;
 import ru.kontur.cajrr.api.Repair;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Optional;
+import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Path("/repair")
@@ -16,21 +21,35 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RepairResource {
 
 
-    private final String template;
-    private final String defaultName;
+    private final AppContext context;
+
     private final AtomicLong counter;
 
 
-    public RepairResource(String template, String defaultName) {
-        this.template = template;
-        this.defaultName = defaultName;
+    public RepairResource(AppContext context) {
+        this.context = context;
         this.counter = new AtomicLong();
     }
 
-    @GET
-    @Timed
-    public Repair sayHello(@QueryParam("name") Optional<String> name) {
-        final String value = String.format(template, name.orElse(defaultName));
-        return new Repair(counter.incrementAndGet(), value);
+    @POST
+    public Repair repairFragment(@Context UriInfo uriInfo,
+                                 @QueryParam("host") Optional<String> host,
+                                 @QueryParam("port") Optional<String> port,
+                                 @QueryParam("keyspace") Optional<String> keyspace,
+                                 @QueryParam("owner") Optional<String> owner,
+                                 @QueryParam("cause") Optional<String> cause,
+                                 @QueryParam("start") Optional<Integer> start,
+                                 @QueryParam("finish") Optional<String> finish
+                                 ) {
+
+        Map<String, String> options = new HashMap<>();
+        // Add repair options
+        Repair repair = new Repair(counter.incrementAndGet(), options);
+        try {
+            context.registerRepair(repair);
+        } catch (IOException e) {
+            repair.error(e.getMessage());
+        }
+        return repair;
     }
 }

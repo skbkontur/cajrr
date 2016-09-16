@@ -2,10 +2,10 @@ package ru.kontur.cajrr.health;
 
 import com.codahale.metrics.health.HealthCheck;
 
-public class TemplateHealthCheck extends HealthCheck {
+public class RepairHealthCheck extends HealthCheck {
     private final String template;
 
-    public TemplateHealthCheck(String template) {
+    public RepairHealthCheck(String template) {
         this.template = template;
     }
 

@@ -40,6 +40,11 @@
             <artifactId>dropwizard-assets</artifactId>
             <version>${dropwizard.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>cassandra-all</artifactId>
+            <version>${cassandra.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -48,8 +53,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
