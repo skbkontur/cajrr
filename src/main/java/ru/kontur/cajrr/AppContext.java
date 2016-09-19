@@ -25,9 +25,5 @@ public class AppContext {
         {
             throw new IOException(e) ;
         }
-        finally
-        {
-            proxy.removeListener(observer);
-        }
     }
 }

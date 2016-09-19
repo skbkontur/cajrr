@@ -35,8 +35,8 @@ public class RepairObserver  extends JMXNotificationProgressListener {
 
     public void run() throws Exception
     {
-        String keyspace = repair.getKeyspace();
-        cmd = proxy.repairAsync(keyspace, repair.getOptions());
+        String keyspace = repair.keyspace;
+        cmd = proxy.repairAsync(keyspace, repair.options);
         if (cmd <= 0)
         {
             repair.error(String.format("There is nothing to repair in keyspace %s", keyspace));
@@ -46,7 +46,7 @@ public class RepairObserver  extends JMXNotificationProgressListener {
             condition.await();
             if (error != null)
             {
-                throw error;
+                repair.error(error.getMessage());
             }
             if (hasNotificationLost)
             {
@@ -76,14 +76,18 @@ public class RepairObserver  extends JMXNotificationProgressListener {
     {
         error = new IOException(String.format("[%s] JMX connection closed. You should check server log for repair status of keyspace %s"
                         + "(Subsequent keyspaces are not going to be repaired).",
-                format.format(timestamp), repair.getKeyspace()));
+                format.format(timestamp), repair.keyspace));
         condition.signalAll();
     }
 
     @Override
     public void progress(String tag, ProgressEvent event)
     {
-        repair.progress(event);
+        try {
+            repair.progress(event); // call back progress
+        } catch (Exception e) {
+            repair.error(e.getMessage());
+        }
         ProgressEventType type = event.getType();
         if (type == ProgressEventType.COMPLETE)
         {

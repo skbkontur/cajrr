@@ -8,6 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.health.RepairHealthCheck;
 import ru.kontur.cajrr.resources.RepairResource;
+import ru.kontur.cajrr.tools.CassandraProxy;
+
+import java.io.IOException;
+
 /**
  * Cajjr
  *
@@ -40,12 +44,22 @@ public class App extends Application<AppConfiguration>
 
     @Override
     public void run(AppConfiguration configuration,
-                    Environment environment) {
+                    Environment environment) throws IOException {
 
         context.config = configuration;
 
+        try {
+            context.proxy = new CassandraProxy(
+                    configuration.getHost(),
+                    configuration.getPort(),
+                    configuration.getUsername(),
+                    configuration.getPassword()
+            );
+        } catch (IOException e) {
+        }
+
         final RepairResource resource = new RepairResource(context);
-        final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration.getTemplate());
+        final RepairHealthCheck healthCheck = new RepairHealthCheck();
 
         environment.healthChecks().register("repair", healthCheck);
         environment.jersey().register(resource);

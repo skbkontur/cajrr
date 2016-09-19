@@ -1,5 +1,5 @@
-template: Hello, %s!
-defaultName: Komber
+host: localhost
+port: 7199
 
 logging:
   level: INFO

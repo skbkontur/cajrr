@@ -20,9 +20,8 @@ import java.util.Map;
 public class CassandraProxy {
     private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://[%s]:%d/jmxrmi";
     private static final String ssObjName = "org.apache.cassandra.db:type=StorageService";
-    private static final int defaultPort = 7199;
     final String host;
-    final int port;
+    final Integer port;
     private String username;
     private String password;
 
@@ -37,7 +36,7 @@ public class CassandraProxy {
      * @param port TCP port of the remote JMX agent
      * @throws IOException on connection failures
      */
-    public CassandraProxy(String host, int port, String username, String password) throws IOException
+    public CassandraProxy(String host, Integer port, String username, String password) throws IOException
     {
         assert username != null && !username.isEmpty() && password != null && !password.isEmpty()
                 : "neither username nor password can be blank";
@@ -56,23 +55,10 @@ public class CassandraProxy {
      * @param port TCP port of the remote JMX agent
      * @throws IOException on connection failures
      */
-    public CassandraProxy(String host, int port) throws IOException
+    public CassandraProxy(String host, Integer port) throws IOException
     {
         this.host = host;
         this.port = port;
-        connect();
-    }
-
-    /**
-     * Creates a NodeProbe using the specified JMX host and default port.
-     *
-     * @param host hostname or IP address of the JMX agent
-     * @throws IOException on connection failures
-     */
-    public CassandraProxy(String host) throws IOException
-    {
-        this.host = host;
-        this.port = defaultPort;
         connect();
     }
 

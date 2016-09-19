@@ -1,30 +1,26 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.hibernate.validator.constraints.Length;
 
 public class RepairStatus {
-    private long id;
 
-    @Length(max = 3)
-    private String content;
+    @JsonProperty
+    public long id;
+
+    @JsonProperty
+    public String message;
+
+    @JsonProperty
+    public boolean error;
+
 
     public RepairStatus() {
         // Jackson deserialization
     }
 
-    public RepairStatus(long id, String content) {
+    public RepairStatus(long id, String message) {
         this.id = id;
-        this.content = content;
+        this.message = message;
     }
 
-    @JsonProperty
-    public long getId() {
-        return id;
-    }
-
-    @JsonProperty
-    public String getContent() {
-        return content;
-    }
 }
