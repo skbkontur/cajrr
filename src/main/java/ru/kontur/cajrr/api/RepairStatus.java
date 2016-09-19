@@ -13,6 +13,15 @@ public class RepairStatus {
     @JsonProperty
     public boolean error;
 
+    @JsonProperty
+    public String type;
+
+    @JsonProperty
+    public int count;
+
+    @JsonProperty
+    public int total;
+
 
     public RepairStatus() {
         // Jackson deserialization

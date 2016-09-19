@@ -56,6 +56,7 @@ public class App extends Application<AppConfiguration>
                     configuration.getPassword()
             );
         } catch (IOException e) {
+            throw e;
         }
 
         final RepairResource resource = new RepairResource(context);
