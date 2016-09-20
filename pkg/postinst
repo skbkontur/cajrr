@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+# Initial installation: $1 == 1
+# Upgrade: $1 == 2, and configured to restart on upgrade
+#if [ $1 -eq 1 ] ; then
+  if ! getent group "cajrr" > /dev/null 2>&1 ; then
+    groupadd -r "cajrr"
+  fi
+  if ! getent passwd "cajrr" > /dev/null 2>&1 ; then
+    useradd -r -g cajrr -d /usr/share/cajrr -s /sbin/nologin \
+      -c "Cajrr user" cajrr
+  fi
+
+  mkdir -p /var/log/cajrr /var/run/cajrr
+  chown -R cajrr:cajrr /var/log/cajrr /var/run/cajrr
+  chmod 755 /var/log/cajrr
+
+  if [ -x /bin/systemctl ] ; then
+    /bin/systemctl daemon-reload
+    /bin/systemctl enable cajrr.service
+  elif [ -x /sbin/chkconfig ] ; then
+    /sbin/chkconfig --add cajrr
+  fi
+#fi

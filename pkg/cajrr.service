@@ -1,0 +1,14 @@
+[Unit]
+Description=cajrr - cassandra java range repair service
+After=network-online.target
+
+[Service]
+ExecStart=java -jar /usr/lib/cajrr/cajrr.jar server /etc/cajrr/config.yml
+User=cajrr
+Group=cajrr
+PIDFile=/var/run/cajrr/cajrr.pid
+Restart=on-failure
+ExecReload=/bin/kill -USR2 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
