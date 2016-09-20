@@ -57,7 +57,6 @@ packages: clean build tar rpm deb
 
 clean:
 	rm -rf build
-	mvn clean
 
 
 .PHONY: test
