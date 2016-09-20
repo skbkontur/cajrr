@@ -3,7 +3,7 @@ Description=cajrr - cassandra java range repair service
 After=network-online.target
 
 [Service]
-ExecStart=java -jar /usr/lib/cajrr/cajrr.jar server /etc/cajrr/config.yml
+ExecStart=/usr/bin/java -jar /usr/lib/cajrr/cajrr.jar server /etc/cajrr/config.yml
 User=cajrr
 Group=cajrr
 PIDFile=/var/run/cajrr/cajrr.pid
