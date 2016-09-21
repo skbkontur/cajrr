@@ -6,7 +6,7 @@ After=network-online.target
 ExecStart=/usr/bin/java -jar /usr/lib/cajrr/cajrr.jar server /etc/cajrr/config.yml
 User=cajrr
 Group=cajrr
-PIDFile=/var/run/cajrr/cajrr.pid
+PIDFile=/var/run/cajrr.pid
 Restart=on-failure
 ExecReload=/bin/kill -USR2 $MAINPID
 
