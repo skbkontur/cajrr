@@ -26,7 +26,6 @@ public class CassandraProxy {
     private String password;
 
     private JMXConnector jmxc;
-    private MBeanServerConnection mbeanServerConn;
     private StorageServiceMBean ssProxy;
 
     /**
@@ -82,6 +81,12 @@ public class CassandraProxy {
         return null;
     }
 
+    public Map<String, String> getTokenToEndpointMap()
+    {
+        return ssProxy.getTokenToEndpointMap();
+    }
+
+
     public int repairAsync(String keyspace, Map<String, String> options) {
         return ssProxy.repairAsync(keyspace, options);
     }
@@ -103,7 +108,7 @@ public class CassandraProxy {
         env.put("com.sun.jndi.rmi.factory.socket", getRMIClientSocketFactory());
 
         jmxc = JMXConnectorFactory.connect(jmxUrl, env);
-        mbeanServerConn = jmxc.getMBeanServerConnection();
+        MBeanServerConnection mbeanServerConn = jmxc.getMBeanServerConnection();
 
         try
         {

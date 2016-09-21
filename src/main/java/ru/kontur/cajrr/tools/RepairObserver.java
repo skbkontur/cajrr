@@ -92,6 +92,7 @@ public class RepairObserver  extends JMXNotificationProgressListener {
         if (type == ProgressEventType.COMPLETE)
         {
             condition.signalAll();
+            proxy.removeListener(this);
         }
     }
 }

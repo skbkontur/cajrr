@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.health.RepairHealthCheck;
 import ru.kontur.cajrr.resources.RepairResource;
+import ru.kontur.cajrr.resources.RingResource;
 import ru.kontur.cajrr.tools.CassandraProxy;
 
 import java.io.IOException;
@@ -59,10 +60,12 @@ public class App extends Application<AppConfiguration>
             throw e;
         }
 
-        final RepairResource resource = new RepairResource(context);
+        final RepairResource repairResource = new RepairResource(context);
+        final RingResource ringResource = new RingResource(context);
         final RepairHealthCheck healthCheck = new RepairHealthCheck();
 
         environment.healthChecks().register("repair", healthCheck);
-        environment.jersey().register(resource);
+        environment.jersey().register(repairResource);
+        environment.jersey().register(ringResource);
     }
 }
