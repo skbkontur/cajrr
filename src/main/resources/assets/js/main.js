@@ -22,13 +22,14 @@ function loadData(slices) {
         tokens = result.tokens;
         size = tokens.length;
         data = [];
-        var min = -1;
+        var min = 0;
         var max = 1;
         for(i=0; i<size; i++) {
             item = tokens[i];
             for (j=0; j<item.ranges.length; j++) {
                 range = item.ranges[j];
-                range.repaired = Math.floor(Math.random() * (max - min + 1)) + min;
+                //range.repaired = Math.floor(Math.random() * (max - min + 1)) + min;
+                range.repaired = i*size+j;
                 data.push(range);
             }
         }
@@ -41,8 +42,8 @@ function loadData(slices) {
 
 function makeChart(data, numTokens) {
     var chart = circularHeatChart()
-        .innerRadius(20)
-        .segmentHeight(40)
+        .innerRadius(0)
+        .segmentHeight(30)
         .numSegments(numTokens)
         .range(["white", "green"]);
 
@@ -63,4 +64,4 @@ function makeChart(data, numTokens) {
     });
 }
 
-loadData(10);
+loadData(5);

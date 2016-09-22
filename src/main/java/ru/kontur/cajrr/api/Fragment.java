@@ -15,16 +15,16 @@ class Fragment {
 
     @Override
     public String toString() {
-        return String.format("%s:%s", getStart().toString(), getEnd().subtract(BigInteger.ONE).toString());
+        return String.format("%s:%s", start.toString(), end.subtract(BigInteger.ONE).toString());
     }
 
     @JsonProperty
-    public BigInteger getStart() {
-        return start;
+    public String getStart() {
+        return start.toString();
     }
 
     @JsonProperty
-    public BigInteger getEnd() {
-        return end;
+    public String getEnd() {
+        return end.toString();
     }
 }
