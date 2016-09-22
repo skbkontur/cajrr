@@ -1,0 +1,41 @@
+/* Master Styles */
+h1 {
+  color: #369;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 250%;
+}
+h2, h3 {
+  color: #444;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: lighter;
+}
+body {
+  margin: 2em;
+}
+
+
+/* SVG styling */
+svg {
+	width: 960px;
+	height: 960px;
+}
+#chart4 svg {
+	height: 960px;
+}
+path {
+	stroke: #777;
+	stroke-width: 0.1px;
+}
+
+.labels {
+	fill: #aaa;
+	font-weight: 200;
+	letter-spacing: -1px;
+}
+.labels.segment {
+	font-size: 10px;
+}
+
+#chart3 .labels {
+	fill: #555;
+}
