@@ -18,7 +18,7 @@ var getJSON = function(url) {
 
 function loadData(slices) {
 
-    getJSON('http://localhost:8080/ring/'+slices).then(function(result) {
+    getJSON(window.location.pathname.'/ring/'+slices).then(function(result) {
         tokens = result.tokens;
         size = tokens.length;
         data = [];
