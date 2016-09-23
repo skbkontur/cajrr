@@ -5,19 +5,19 @@ import com.google.common.collect.Lists;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 class Token {
-
-    private String key;
-    private Token next;
-    private List<Fragment> ranges;
 
     private final BigInteger RANGE_MIN;
     private final BigInteger RANGE_MAX;
     private final BigInteger RANGE_SIZE;
+    private String key;
+    private Token next;
+    private List<Fragment> ranges;
 
 
-    public Token(String key) {
+    Token(String key) {
         this.key = key;
 
         RANGE_MIN = new BigInteger("2").pow(63).negate();
@@ -26,11 +26,15 @@ class Token {
 
     }
 
-    public void setNext(Token next) {
+    private static boolean greaterThan(BigInteger a, BigInteger b) {
+        return a.compareTo(b) > 0;
+    }
+
+    void setNext(Token next) {
         this.next = next;
     }
 
-    public List<Fragment> fragment(int slices) {
+    List<Fragment> fragment(int slices, AtomicLong counter) {
         List<Fragment> result = Lists.newArrayList();
         BigInteger start = value();
         BigInteger stop = next.value();
@@ -60,19 +64,14 @@ class Token {
         }
 
         for (int j = 0; j < segmentCount; j++) {
-            result.add(new Fragment(endpointTokens.get(j), endpointTokens.get(j + 1).subtract(BigInteger.ONE)));
+            result.add(new Fragment(counter.incrementAndGet(), endpointTokens.get(j), endpointTokens.get(j + 1).subtract(BigInteger.ONE)));
         }
         ranges = result;
         return result;
     }
 
-
     private BigInteger value() {
         return new BigInteger(key);
-    }
-
-    private static boolean greaterThan(BigInteger a, BigInteger b) {
-        return a.compareTo(b) > 0;
     }
 
     @JsonProperty

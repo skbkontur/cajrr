@@ -18,21 +18,22 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Ring {
 
     private final List<Token> tokens;
 
-    public Ring(Map<String, String> map, int slices) {
+    public Ring(Map<String, String> map, int slices, AtomicLong counter) {
 
         tokens = tokenizeMap(map);
 
-        fragment(slices);
+        fragment(slices, counter);
     }
 
-    private void fragment(int slices) {
+    private void fragment(int slices, AtomicLong counter) {
         for(Token t: tokens) {
-            t.fragment(slices);
+            t.fragment(slices, counter);
         }
     }
 
