@@ -9,3 +9,11 @@ logging:
   appenders:
     - type: console
       logFormat: "%-6level [%d] [%t] %logger{5} - %msg %n"
+
+metrics:
+  frequency: 1 minute
+  reporters:
+    - type: graphite
+      host: graphite.example.com
+      port: 2003
+      prefix: DevOps.cajrr.localhost

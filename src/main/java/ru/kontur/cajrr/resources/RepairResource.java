@@ -1,5 +1,6 @@
 package ru.kontur.cajrr.resources;
 
+import com.codahale.metrics.annotation.Timed;
 import ru.kontur.cajrr.AppContext;
 import ru.kontur.cajrr.api.Repair;
 
@@ -28,14 +29,11 @@ public class RepairResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Repair repairFragment(Repair repair) {
+    @Timed
+    public Repair repairFragment(Repair repair) throws IOException {
         // Add repair options
         repair.id = counter.incrementAndGet();
-        try {
-            context.registerRepair(repair);
-        } catch (IOException e) {
-            repair.error(e.getMessage());
-        }
+        context.registerRepair(repair);
         return repair;
     }
 }
