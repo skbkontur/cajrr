@@ -45,6 +45,8 @@ public class Repair {
     @JsonProperty
     public Boolean error;
 
+    private RepairStatus status = new RepairStatus();
+
     public Repair() {
         options = new HashMap<>(5);
         error = false;
@@ -56,15 +58,15 @@ public class Repair {
         this.callback = callback;
         this.cause = cause;
         this.owner = owner;
-        
+
+        this.status.id = id;
     }
 
     public void progress(ProgressEvent event) throws Exception {
         HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost(callback);
 
-// Request parameters and other properties.
-        RepairStatus status = new RepairStatus(id, event);
+        status.populate(event);
         status.error = error;
 
         ObjectMapper mapper = new ObjectMapper();
@@ -81,10 +83,6 @@ public class Repair {
                 instream.close(); // TODO log
             }
         }
-    }
-
-    private String getStatus(ProgressEvent event) {
-        return event.toString();
     }
 
     public void error(String message) {

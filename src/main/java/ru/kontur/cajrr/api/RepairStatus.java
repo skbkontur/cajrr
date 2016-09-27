@@ -52,18 +52,16 @@ public class RepairStatus {
         // Jackson deserialization
     }
 
-    public RepairStatus(long id, String message) {
-        this.id = id;
-        this.message = message;
-    }
-
-    public RepairStatus(long id, ProgressEvent event) {
-        this.id = id;
+    public void populate(ProgressEvent event) {
         this.type = event.getType().toString();
         this.count = event.getProgressCount();
         this.total = event.getTotal();
         setMessage(event.getMessage());
 
+    }
+
+    public RepairStatus(long id) {
+        this.id = id;
     }
 
     private void setMessage(String message) {
