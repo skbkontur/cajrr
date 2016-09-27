@@ -86,7 +86,7 @@ public class RepairStatus {
     private void processComplete(String input) {
         this.message = input;
 
-        Pattern p = Pattern.compile("Repair command #([0-9]+) finished in (.+) seconds");
+        Pattern p = Pattern.compile("Repair command #([0-9]+) finished in (.+) second");
         Matcher m = p.matcher(input);
 
         if (m.find()) {

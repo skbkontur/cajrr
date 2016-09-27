@@ -4,6 +4,8 @@ import org.apache.cassandra.utils.concurrent.SimpleCondition;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.apache.cassandra.utils.progress.jmx.JMXNotificationProgressListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.api.Repair;
 
 import java.io.IOException;
@@ -26,6 +28,9 @@ public class RepairObserver  extends JMXNotificationProgressListener {
     private volatile boolean hasNotificationLost;
     private volatile Exception error;
 
+
+    private static final Logger LOG = LoggerFactory.getLogger(RepairObserver.class);
+
     public RepairObserver(Repair repair, CassandraProxy proxy) {
 
         this.repair = repair;
@@ -39,18 +44,19 @@ public class RepairObserver  extends JMXNotificationProgressListener {
         cmd = proxy.repairAsync(keyspace, repair.options);
         if (cmd <= 0)
         {
-            repair.error(String.format("There is nothing to repair in keyspace %s", keyspace));
+            LOG.error(String.format("There is nothing to repair in keyspace %s", keyspace));
         }
         else
         {
             condition.await();
             if (error != null)
             {
-                repair.error(error.getMessage());
+                LOG.error(error.toString());
             }
             if (hasNotificationLost)
             {
-                repair.error(String.format("There were some lost notification(s). You should check server log for repair status of keyspace %s", keyspace));
+
+                LOG.error(String.format("There were some lost notification(s). You should check server log for repair status of keyspace %s", keyspace));
             }
         }
     }
@@ -89,13 +95,10 @@ public class RepairObserver  extends JMXNotificationProgressListener {
             if (type == ProgressEventType.COMPLETE)
             {
                 condition.signalAll();
-                proxy.removeListener(this);
             }
         } catch (Exception e) {
             error = e;
             condition.signalAll();
         }
-
-
     }
 }
