@@ -64,12 +64,7 @@ public class Repair {
         HttpPost httppost = new HttpPost(callback);
 
 // Request parameters and other properties.
-        RepairStatus status = new RepairStatus();
-        status.id = id;
-        status.type = event.getType().toString();
-        status.count = event.getProgressCount();
-        status.total = event.getTotal();
-        status.message = event.getMessage();
+        RepairStatus status = new RepairStatus(id, event);
         status.error = error;
 
         ObjectMapper mapper = new ObjectMapper();

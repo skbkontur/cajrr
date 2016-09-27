@@ -64,7 +64,7 @@ class Token {
         }
 
         for (int j = 0; j < segmentCount; j++) {
-            result.add(new Fragment(counter.incrementAndGet(), endpointTokens.get(j), endpointTokens.get(j + 1).subtract(BigInteger.ONE)));
+            result.add(new Fragment(counter.incrementAndGet(), endpointTokens.get(j), endpointTokens.get(j + 1)));
         }
         ranges = result;
         return result;
