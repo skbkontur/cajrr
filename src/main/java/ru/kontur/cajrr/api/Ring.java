@@ -15,6 +15,8 @@ package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -24,14 +26,26 @@ public class Ring {
 
     private final List<Token> tokens;
 
-    public Ring(Map<String, String> map, int slices, AtomicLong counter) {
+    @JsonProperty
+    public String name;
+
+    @JsonProperty
+    public String partitioner;
+
+
+    private static final Logger LOG = LoggerFactory.getLogger(Ring.class);
+
+    public Ring(String name, String partitioner, Map<String, String> map, long slices, AtomicLong counter) {
+
+        this.name = name;
+        this.partitioner = partitioner;
 
         tokens = tokenizeMap(map);
 
         fragment(slices, counter);
     }
 
-    private void fragment(int slices, AtomicLong counter) {
+    private void fragment(long slices, AtomicLong counter) {
         for(Token t: tokens) {
             t.fragment(slices, counter);
         }
@@ -43,15 +57,19 @@ public class Ring {
         List<Token> result = Lists.newArrayList();
 
         for(Map.Entry<String, String> entry: map.entrySet()) {
-            Token token = new Token(entry.getKey());
-            if(prev==null) {
-                first = token;
+            try {
+                Token token = new Token(this, entry.getKey());
+                if(prev==null) {
+                    first = token;
+                    prev = token;
+                    continue;
+                }
+                prev.setNext(token);
+                result.add(prev);
                 prev = token;
-                continue;
+            } catch (Exception e) {
+                LOG.error(e.toString());
             }
-            prev.setNext(token);
-            result.add(prev);
-            prev = token;
         }
         assert prev != null;
         prev.setNext(first);

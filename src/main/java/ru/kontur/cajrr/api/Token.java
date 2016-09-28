@@ -10,18 +10,29 @@ import java.util.concurrent.atomic.AtomicLong;
 class Token {
 
     private final BigInteger RANGE_MIN;
+
     private final BigInteger RANGE_MAX;
     private final BigInteger RANGE_SIZE;
     private String key;
     private Token next;
     private List<Fragment> ranges;
 
+    @JsonProperty
+    public String getMax() {
+        return RANGE_MAX.toString();
+    }
 
-    Token(String key) {
+    Token(Ring ring, String key) throws Exception {
         this.key = key;
-
-        RANGE_MIN = new BigInteger("2").pow(63).negate();
-        RANGE_MAX = new BigInteger("2").pow(63).subtract(BigInteger.ONE);
+        if (ring.partitioner.endsWith("RandomPartitioner")) {
+            RANGE_MIN = BigInteger.ZERO;
+            RANGE_MAX = new BigInteger("2").pow(127).subtract(BigInteger.ONE);
+        } else if (ring.partitioner.endsWith("Murmur3Partitioner")) {
+            RANGE_MIN = new BigInteger("2").pow(63).negate();
+            RANGE_MAX = new BigInteger("2").pow(63).subtract(BigInteger.ONE);
+        } else {
+            throw new Exception("Unsupported partitioner " + ring.partitioner);
+        }
         RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
 
     }
@@ -34,7 +45,7 @@ class Token {
         this.next = next;
     }
 
-    List<Fragment> fragment(int slices, AtomicLong counter) {
+    List<Fragment> fragment(long slices, AtomicLong counter) {
         List<Fragment> result = Lists.newArrayList();
         BigInteger start = value();
         BigInteger stop = next.value();

@@ -133,4 +133,12 @@ public class CassandraProxy {
         else
             return RMISocketFactory.getDefaultSocketFactory();
     }
+
+    public String getClusterName() {
+        return ssProxy.getClusterName();
+    }
+
+    public String getPartitioner() {
+        return ssProxy.getPartitionerName();
+    }
 }
