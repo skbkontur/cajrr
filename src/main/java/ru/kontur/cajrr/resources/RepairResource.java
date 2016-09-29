@@ -1,13 +1,11 @@
 package ru.kontur.cajrr.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import ru.kontur.cajrr.AppContext;
+import io.dropwizard.jersey.params.IntParam;
+import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Repair;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -17,23 +15,39 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RepairResource {
 
 
-    private final AppContext context;
+    private final AppConfiguration config;
 
-    private final AtomicLong counter;
+    private final AtomicLong counter = new AtomicLong();
 
 
-    public RepairResource(AppContext context) {
-        this.context = context;
-        this.counter = new AtomicLong();
+    public RepairResource(AppConfiguration config) {
+        this.config = config;
+        counter.set(0);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
-    public Repair repairFragment(Repair repair) throws IOException {
+    @Path("/repair/{ring}")
+    public Repair repairFragment(
+            @PathParam("index") IntParam index,
+            Repair repair) throws IOException {
         // Add repair options
         repair.id = counter.incrementAndGet();
-        context.registerRepair(repair);
+        //Node node = config.clusters.get(repair.host);
+
+        //public void registerRepair(Repair repair) throws IOException {
+            //RepairObserver observer = new RepairObserver(repair, proxy);
+          //  try {
+                //proxy.addListener(observer);
+                //observer.run();
+            //}   catch (Exception e)
+            //{
+              //  throw new IOException(e) ;
+            //}
+        //}
+
+        //config.registerRepair(repair);
         return repair;
     }
 }

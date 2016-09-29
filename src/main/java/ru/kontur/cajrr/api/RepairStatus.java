@@ -12,40 +12,52 @@ public class RepairStatus {
     public long id;
 
     @JsonProperty
-    public String message;
+    public String cause;
 
     @JsonProperty
-    public boolean error;
-
-    @JsonProperty
-    public String type;
-
-    @JsonProperty
-    public int count;
-
-    @JsonProperty
-    public int total;
-
-    @JsonProperty
-    public String session;
+    public String cluster;
 
     @JsonProperty
     public int command;
 
     @JsonProperty
-    public String start;
+    public int count;
 
     @JsonProperty
-    public String finish;
+    public int duration;
+
+    @JsonProperty
+    public boolean error;
+
+    @JsonProperty
+    public String end;
 
     @JsonProperty
     public String keyspace;
 
     @JsonProperty
+    public String message;
+
+    @JsonProperty
     public String options;
 
     @JsonProperty
-    public int duration;
+    public String owner;
+
+    @JsonProperty
+    public String partitioner;
+
+    @JsonProperty
+    public String session;
+
+    @JsonProperty
+    public String start;
+
+    @JsonProperty
+    public int total;
+
+    @JsonProperty
+    public String type;
 
 
     public RepairStatus() {
@@ -123,7 +135,7 @@ public class RepairStatus {
         if (m.find()) {
             this.session = m.group(1);
             this.start = m.group(2);
-            this.finish = m.group(3);
+            this.end = m.group(3);
             this.message = "Repair session " + m.group(4);
         }
     }

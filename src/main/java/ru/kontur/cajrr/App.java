@@ -6,10 +6,10 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.kontur.cajrr.api.Cluster;
 import ru.kontur.cajrr.health.RepairHealthCheck;
 import ru.kontur.cajrr.resources.RepairResource;
 import ru.kontur.cajrr.resources.RingResource;
-import ru.kontur.cajrr.tools.CassandraProxy;
 
 import java.io.IOException;
 
@@ -19,14 +19,11 @@ import java.io.IOException;
  */
 public class App extends Application<AppConfiguration>
 {
-    static final Logger LOG = LoggerFactory.getLogger(App.class);
-
-    private AppContext context;
+    private static final Logger LOG = LoggerFactory.getLogger(App.class);
 
     public App() {
         super();
         LOG.info("Default Cajrr constructor called");
-        this.context = new AppContext();
     }
 
     public static void main(String[] args) throws Exception {
@@ -47,22 +44,11 @@ public class App extends Application<AppConfiguration>
     public void run(AppConfiguration configuration,
                     Environment environment) throws IOException {
 
-        context.config = configuration;
+        configuration.clusters.forEach(Cluster::connect);
 
-        try {
-            context.proxy = new CassandraProxy(
-                    configuration.getHost(),
-                    configuration.getPort(),
-                    configuration.getUsername(),
-                    configuration.getPassword()
-            );
-        } catch (IOException e) {
-            throw e;
-        }
-
-        final RepairResource repairResource = new RepairResource(context);
-        final RingResource ringResource = new RingResource(context);
-        final RepairHealthCheck healthCheck = new RepairHealthCheck();
+        final RingResource ringResource = new RingResource(configuration);
+        final RepairResource repairResource = new RepairResource(configuration);
+        final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration);
 
         environment.healthChecks().register("repair", healthCheck);
         environment.jersey().register(repairResource);

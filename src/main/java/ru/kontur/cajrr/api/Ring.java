@@ -1,16 +1,3 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,41 +11,38 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Ring {
 
-    private final List<Token> tokens;
-
-    @JsonProperty
-    public String name;
-
-    @JsonProperty
-    public String partitioner;
-
-
     private static final Logger LOG = LoggerFactory.getLogger(Ring.class);
 
-    public Ring(String name, String partitioner, Map<String, String> map, long slices, AtomicLong counter) {
+    Cluster cluster;
 
-        this.name = name;
-        this.partitioner = partitioner;
+    private AtomicLong counter = new AtomicLong();
+    private List<Token> tokens;
 
-        tokens = tokenizeMap(map);
-
-        fragment(slices, counter);
+    @JsonProperty
+    public List<Token> getTokens() {
+        return tokens;
     }
 
-    private void fragment(long slices, AtomicLong counter) {
-        for(Token t: tokens) {
-            t.fragment(slices, counter);
-        }
+    @JsonProperty
+    public int slices = 1;
+
+    public Ring() {
+        // Deserializer
     }
 
-    private List<Token> tokenizeMap(Map<String, String> map) {
+    public void setCluster(Cluster cluster) {
+        this.cluster = cluster;
+        Map<String, String> map = cluster.getTokenMap();
         Token first = null;
         Token prev = null;
         List<Token> result = Lists.newArrayList();
 
         for(Map.Entry<String, String> entry: map.entrySet()) {
             try {
-                Token token = new Token(this, entry.getKey());
+                String endpoint = entry.getValue();
+                Node node = cluster.findNode(endpoint);
+
+                Token token = new Token(entry.getKey(), node, this);
                 if(prev==null) {
                     first = token;
                     prev = token;
@@ -74,11 +58,18 @@ public class Ring {
         assert prev != null;
         prev.setNext(first);
         result.add(prev);
-        return result;
+        tokens = result;
+        fragment();
     }
 
-    @JsonProperty
-    public List<Token> getTokens() {
-        return tokens;
+    private void fragment() {
+        counter.set(0);
+        for(Token t: tokens) {
+            t.fragment(slices, counter);
+        }
+    }
+
+    public Boolean isPartitioner(String name) {
+        return cluster.getPartitioner().endsWith(name);
     }
 }

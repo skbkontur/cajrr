@@ -14,10 +14,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by Kirill Melnikov on 16.09.16.
- *
- */
 public class Repair {
 
 
@@ -26,6 +22,12 @@ public class Repair {
 
     @JsonProperty
     public String keyspace;
+
+    @JsonProperty
+    public String cluster;
+
+    @JsonProperty
+    public String partitioner;
 
     @JsonProperty
     public String cause;
@@ -52,22 +54,18 @@ public class Repair {
         error = false;
     }
 
-    public Repair(long id, Map<String, String> options, String owner,  String cause, String callback) {
-        this.id = id;
-        this.options = options;
-        this.callback = callback;
-        this.cause = cause;
-        this.owner = owner;
-
-        this.status.id = id;
-    }
-
     public void progress(ProgressEvent event) throws Exception {
         HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost(callback);
 
         status.populate(event);
         status.error = error;
+        status.cause = cause;
+        status.owner = owner;
+        status.cluster = cluster;
+        status.partitioner = partitioner;
+
+
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonString = mapper.writeValueAsString(status);

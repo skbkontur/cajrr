@@ -12,14 +12,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.locks.Condition;
 
-/**
- * Created by Kirill Melnikov on 16.09.16.
- *
- */
 public class RepairObserver  extends JMXNotificationProgressListener {
 
     private Repair repair;
-    private final CassandraProxy proxy;
+    //private final CassandraProxy proxy;
     private final Condition condition = new SimpleCondition();
     private int cmd;
 
@@ -31,17 +27,17 @@ public class RepairObserver  extends JMXNotificationProgressListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepairObserver.class);
 
-    public RepairObserver(Repair repair, CassandraProxy proxy) {
+    public RepairObserver(Repair repair) {
 
         this.repair = repair;
-        this.proxy = proxy;
+        //this.proxy = proxy;
     }
 
 
     public void run() throws Exception
     {
         String keyspace = repair.keyspace;
-        cmd = proxy.repairAsync(keyspace, repair.options);
+        //cmd = proxy.repairAsync(keyspace, repair.options);
         if (cmd <= 0)
         {
             LOG.error(String.format("There is nothing to repair in keyspace %s", keyspace));

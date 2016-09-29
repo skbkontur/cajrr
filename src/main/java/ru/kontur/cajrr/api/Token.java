@@ -17,21 +17,30 @@ class Token {
     private Token next;
     private List<Fragment> ranges;
 
+    private Node node;
+    private Ring ring;
+
+    @JsonProperty
+    public String host;
+
     @JsonProperty
     public String getMax() {
         return RANGE_MAX.toString();
     }
 
-    Token(Ring ring, String key) throws Exception {
+    Token(String key, Node node, Ring ring) throws Exception {
         this.key = key;
-        if (ring.partitioner.endsWith("RandomPartitioner")) {
+        this.node = node;
+        this.ring = ring;
+        this.host = node.getHost();
+        if (ring.isPartitioner("RandomPartitioner")) {
             RANGE_MIN = BigInteger.ZERO;
             RANGE_MAX = new BigInteger("2").pow(127).subtract(BigInteger.ONE);
-        } else if (ring.partitioner.endsWith("Murmur3Partitioner")) {
+        } else if (ring.isPartitioner("Murmur3Partitioner")) {
             RANGE_MIN = new BigInteger("2").pow(63).negate();
             RANGE_MAX = new BigInteger("2").pow(63).subtract(BigInteger.ONE);
         } else {
-            throw new Exception("Unsupported partitioner " + ring.partitioner);
+            throw new Exception("Unsupported partitioner");
         }
         RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
 

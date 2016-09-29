@@ -1,5 +1,13 @@
-host: localhost
-port: 7199
+clusters:
+  - name: Test cluster
+    ring:
+      slices: 10
+    nodes:
+      - host: 172.16.238.10
+        port: 7199
+      - host: 172.16.238.11
+      - host: 172.16.238.12
+
 
 logging:
   level: INFO
