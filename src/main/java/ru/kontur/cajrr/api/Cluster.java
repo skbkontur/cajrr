@@ -1,8 +1,10 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import ru.kontur.cajrr.tools.RepairObserver;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +19,8 @@ public class Cluster {
 
     @JsonProperty
     public List<Node> nodes;
+
+    private Map<Long, Repair> activeRepairs = new HashMap<>();
 
     public void connect() {
         try {
@@ -56,4 +60,17 @@ public class Cluster {
     public boolean isConnected() {
         return connected;
     }
+
+    public void registerRepair(Repair repair) throws IOException {
+        activeRepairs.put(repair.id, repair);
+        Node proxy = findNode(repair.endpoint);
+        RepairObserver observer = new RepairObserver(repair, proxy);
+        try {
+            proxy.addListener(observer);
+            observer.run();
+        }   catch (Exception e) {
+            throw new IOException(e) ;
+        }
+    }
+
 }

@@ -6,16 +6,18 @@ import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.apache.cassandra.utils.progress.jmx.JMXNotificationProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.kontur.cajrr.api.Node;
 import ru.kontur.cajrr.api.Repair;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.locks.Condition;
 
 public class RepairObserver  extends JMXNotificationProgressListener {
 
     private Repair repair;
-    //private final CassandraProxy proxy;
+    private final Node proxy;
     private final Condition condition = new SimpleCondition();
     private int cmd;
 
@@ -27,17 +29,17 @@ public class RepairObserver  extends JMXNotificationProgressListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepairObserver.class);
 
-    public RepairObserver(Repair repair) {
+    public RepairObserver(Repair repair, Node proxy) {
 
         this.repair = repair;
-        //this.proxy = proxy;
+        this.proxy = proxy;
     }
 
 
     public void run() throws Exception
     {
         String keyspace = repair.keyspace;
-        //cmd = proxy.repairAsync(keyspace, repair.options);
+        cmd = proxy.repairAsync(keyspace, repair.getOptions());
         if (cmd <= 0)
         {
             LOG.error(String.format("There is nothing to repair in keyspace %s", keyspace));
@@ -86,7 +88,9 @@ public class RepairObserver  extends JMXNotificationProgressListener {
     public void progress(String tag, ProgressEvent event)
     {
         try {
-            repair.progress(event); // call back progress
+            InputStream response = repair.progress(event); // call back progress
+            LOG.debug(response.toString());
+
             ProgressEventType type = event.getType();
             if (type == ProgressEventType.COMPLETE)
             {

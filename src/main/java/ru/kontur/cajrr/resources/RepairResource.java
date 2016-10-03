@@ -3,6 +3,7 @@ package ru.kontur.cajrr.resources;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.params.IntParam;
 import ru.kontur.cajrr.AppConfiguration;
+import ru.kontur.cajrr.api.Cluster;
 import ru.kontur.cajrr.api.Repair;
 
 import javax.ws.rs.*;
@@ -28,26 +29,19 @@ public class RepairResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
-    @Path("/repair/{ring}")
+    @Path("/repair/{index}")
     public Repair repairFragment(
             @PathParam("index") IntParam index,
             Repair repair) throws IOException {
-        // Add repair options
+
+        if(index.get()<0 || index.get() >= config.clusters.size()) {
+            throw new NotFoundException();
+        }
+        Cluster cluster = config.clusters.get(index.get());
         repair.id = counter.incrementAndGet();
-        //Node node = config.clusters.get(repair.host);
 
-        //public void registerRepair(Repair repair) throws IOException {
-            //RepairObserver observer = new RepairObserver(repair, proxy);
-          //  try {
-                //proxy.addListener(observer);
-                //observer.run();
-            //}   catch (Exception e)
-            //{
-              //  throw new IOException(e) ;
-            //}
-        //}
+        cluster.registerRepair(repair);
 
-        //config.registerRepair(repair);
         return repair;
     }
 }

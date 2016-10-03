@@ -24,68 +24,61 @@ public class Repair {
     public String keyspace;
 
     @JsonProperty
-    public String cluster;
-
-    @JsonProperty
-    public String partitioner;
-
-    @JsonProperty
     public String cause;
 
     @JsonProperty
     public String owner;
 
     @JsonProperty
-    public Map<String, String> options;
+    public Fragment fragment;
 
     @JsonProperty
     public String callback;
 
-    @JsonProperty
-    public String message;
+
+    private RepairStatus status;
 
     @JsonProperty
-    public Boolean error;
-
-    private RepairStatus status = new RepairStatus();
+    public String endpoint;
 
     public Repair() {
-        options = new HashMap<>(5);
-        error = false;
+        status = new RepairStatus(this);
     }
 
-    public void progress(ProgressEvent event) throws Exception {
+    public InputStream progress(ProgressEvent event) throws Exception {
+        status.populate(event);
+
+        //Execute and get the response.
+        return postObject(callback, status);
+    }
+
+    private InputStream postObject(String callback, Object obj)  throws Exception {
         HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost(callback);
 
-        status.populate(event);
-        status.error = error;
-        status.cause = cause;
-        status.owner = owner;
-        status.cluster = cluster;
-        status.partitioner = partitioner;
-
-
-
         ObjectMapper mapper = new ObjectMapper();
-        String jsonString = mapper.writeValueAsString(status);
+        String jsonString = mapper.writeValueAsString(obj);
         httppost.setEntity(new StringEntity(jsonString, "UTF8"));
         httppost.setHeader("Content-type", "application/json");
 
-//Execute and get the response.
+
         HttpResponse response = httpclient.execute(httppost);
         HttpEntity entity = response.getEntity();
 
         if (entity != null) {
             try (InputStream instream = entity.getContent()) {
-                instream.close(); // TODO log
+                instream.close();
+                return instream;
             }
         }
+        return null;
     }
 
-    public void error(String message) {
-        this.error = true;
-        this.message = message;
+
+    public Map<String,String> getOptions() {
+        Map<String, String> result = new HashMap<>();
+        result.put("ranges", fragment.toString());
+        return result;
     }
 }
 

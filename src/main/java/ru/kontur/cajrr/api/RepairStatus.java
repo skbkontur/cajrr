@@ -9,15 +9,6 @@ import java.util.regex.Pattern;
 public class RepairStatus {
 
     @JsonProperty
-    public long id;
-
-    @JsonProperty
-    public String cause;
-
-    @JsonProperty
-    public String cluster;
-
-    @JsonProperty
     public int command;
 
     @JsonProperty
@@ -27,25 +18,13 @@ public class RepairStatus {
     public int duration;
 
     @JsonProperty
-    public boolean error;
-
-    @JsonProperty
     public String end;
-
-    @JsonProperty
-    public String keyspace;
 
     @JsonProperty
     public String message;
 
     @JsonProperty
     public String options;
-
-    @JsonProperty
-    public String owner;
-
-    @JsonProperty
-    public String partitioner;
 
     @JsonProperty
     public String session;
@@ -59,10 +38,24 @@ public class RepairStatus {
     @JsonProperty
     public String type;
 
+    private Repair repair;
+
+    @JsonProperty
+    public Repair getRepair() {
+        return repair;
+    }
+
+
 
     public RepairStatus() {
         // Jackson deserialization
     }
+
+    public RepairStatus(Repair repair) {
+        this.repair = repair;
+    }
+
+
 
     public void populate(ProgressEvent event) {
         this.type = event.getType().toString();
@@ -70,10 +63,6 @@ public class RepairStatus {
         this.total = event.getTotal();
         setMessage(event.getMessage());
 
-    }
-
-    public RepairStatus(long id) {
-        this.id = id;
     }
 
     private void setMessage(String message) {
@@ -120,7 +109,6 @@ public class RepairStatus {
 
         if (m.find()) {
             this.command =  Integer.parseInt(m.group(1));
-            this.keyspace = m.group(2);
             this.options = m.group(3);
             this.message = "Starting repair command";
         }
