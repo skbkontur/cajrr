@@ -11,6 +11,13 @@ class Fragment {
     private BigInteger start;
     private BigInteger end;
 
+    @JsonProperty
+    public String endpoint;
+
+    public Fragment() {
+        // JSON
+    }
+
     Fragment(long id, BigInteger start, BigInteger end) {
         this.id = id;
         this.start = start;
@@ -35,5 +42,20 @@ class Fragment {
     @JsonProperty
     public String getEnd() {
         return end.toString();
+    }
+
+    @JsonProperty
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    @JsonProperty
+    public void setStart(String start) {
+        this.start = new BigInteger(start);
+    }
+
+    @JsonProperty
+    public void setEnd(String end) {
+        this.end = new BigInteger(end);
     }
 }

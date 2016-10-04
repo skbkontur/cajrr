@@ -29,7 +29,7 @@ public class RepairResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
-    @Path("/repair/{index}")
+    @Path("/{index}")
     public Repair repairFragment(
             @PathParam("index") IntParam index,
             Repair repair) throws IOException {

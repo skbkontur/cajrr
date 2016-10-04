@@ -63,7 +63,7 @@ public class Cluster {
 
     public void registerRepair(Repair repair) throws IOException {
         activeRepairs.put(repair.id, repair);
-        Node proxy = findNode(repair.endpoint);
+        Node proxy = findNode(repair.fragment.endpoint);
         RepairObserver observer = new RepairObserver(repair, proxy);
         try {
             proxy.addListener(observer);

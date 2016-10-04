@@ -24,22 +24,15 @@ public class Repair {
     public String keyspace;
 
     @JsonProperty
-    public String cause;
-
-    @JsonProperty
-    public String owner;
-
-    @JsonProperty
     public Fragment fragment;
 
     @JsonProperty
     public String callback;
 
 
+
     private RepairStatus status;
 
-    @JsonProperty
-    public String endpoint;
 
     public Repair() {
         status = new RepairStatus(this);
