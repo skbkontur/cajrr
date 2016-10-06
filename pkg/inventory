@@ -1,0 +1,10 @@
+[cassandra]
+cajrr_cassandra1_1
+cajrr_cassandra2_1
+cajrr_cassandra3_1
+
+[grafana]
+#cajrr_grafana_1
+
+[elk]
+#cajrr_elasticsearch_1

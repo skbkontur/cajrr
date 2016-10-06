@@ -59,4 +59,11 @@ clean:
 	rm -rf build
 
 
+setup: init
+	@cd pkg && ansible-playbook -i inventory provision.yml && \
+	docker-compose -p cajrr restart cassandra1 cassandra2 cassandra3
+
+init:
+	@cd pkg && docker-compose -p cajrr up -d
+
 .PHONY: test
