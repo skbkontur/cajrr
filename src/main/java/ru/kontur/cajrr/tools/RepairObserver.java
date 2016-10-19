@@ -88,7 +88,7 @@ public class RepairObserver  extends JMXNotificationProgressListener {
     public void progress(String tag, ProgressEvent event)
     {
         try {
-            InputStream response = repair.progress(event); // call back progress
+            InputStream response = repair.progress(event, true); // call back progress
             LOG.debug(response.toString());
 
             ProgressEventType type = event.getType();

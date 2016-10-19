@@ -9,6 +9,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.kontur.cajrr.tools.RepairObserver;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -34,15 +37,22 @@ public class Repair {
     private RepairStatus status;
 
 
+
+    private static final Logger LOG = LoggerFactory.getLogger(Repair.class);
+
     public Repair() {
         status = new RepairStatus(this);
     }
 
-    public InputStream progress(ProgressEvent event) throws Exception {
+    public InputStream progress(ProgressEvent event, boolean sendProgress) throws Exception {
         status.populate(event);
 
         //Execute and get the response.
-        return postObject(callback, status);
+        InputStream result = null;
+        if(sendProgress) {
+            result = postObject(callback, status);
+        }
+        return result;
     }
 
     private InputStream postObject(String callback, Object obj)  throws Exception {

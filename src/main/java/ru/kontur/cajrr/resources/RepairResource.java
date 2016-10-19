@@ -32,7 +32,7 @@ public class RepairResource {
     @Path("/{index}")
     public Repair repairFragment(
             @PathParam("index") IntParam index,
-            Repair repair) throws IOException {
+            Repair repair) throws Exception {
 
         if(index.get()<0 || index.get() >= config.clusters.size()) {
             throw new NotFoundException();

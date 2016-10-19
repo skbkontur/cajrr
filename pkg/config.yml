@@ -10,10 +10,10 @@ clusters:
 
 
 logging:
-  level: INFO
+  level: DEBUG
   loggers:
-    io.dropwizard: INFO
-    org.eclipse.jetty: INFO
+    io.dropwizard: DEBUG
+    org.eclipse.jetty: DEBUG
   appenders:
     - type: console
       logFormat: "%-6level [%d] [%t] %logger{5} - %msg %n"
