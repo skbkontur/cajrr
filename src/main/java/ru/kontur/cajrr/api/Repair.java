@@ -32,7 +32,11 @@ public class Repair {
     @JsonProperty
     public String callback;
 
-
+    @JsonProperty
+    public String T1;
+    
+    @JsonProperty
+    public String T2;
 
     private RepairStatus status;
 
