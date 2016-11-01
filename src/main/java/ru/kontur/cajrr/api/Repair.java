@@ -34,17 +34,20 @@ public class Repair {
 
     @JsonProperty
     public String T1;
-    
+
     @JsonProperty
     public String T2;
 
     private RepairStatus status;
+
+    private static final HttpClient httpClient = HttpClients.createDefault();
 
 
 
     private static final Logger LOG = LoggerFactory.getLogger(Repair.class);
 
     public Repair() {
+
         status = new RepairStatus(this);
     }
 
@@ -60,7 +63,6 @@ public class Repair {
     }
 
     private InputStream postObject(String callback, Object obj)  throws Exception {
-        HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost(callback);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -69,7 +71,7 @@ public class Repair {
         httppost.setHeader("Content-type", "application/json");
 
 
-        HttpResponse response = httpclient.execute(httppost);
+        HttpResponse response = httpClient.execute(httppost);
         HttpEntity entity = response.getEntity();
 
         if (entity != null) {
