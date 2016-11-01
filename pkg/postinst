@@ -13,6 +13,7 @@ set -e
       -c "Cajrr user" cajrr
   fi
 
+  mkdir -p /etc/cajrr
   mkdir -p /var/log/cajrr
   chown -R cajrr:cajrr /var/log/cajrr
   chmod 755 /var/log/cajrr

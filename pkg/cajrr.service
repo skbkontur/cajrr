@@ -1,5 +1,5 @@
 [Unit]
-Description=cajrr - cassandra java range repair service
+Description=cassandra java range repair service
 After=network-online.target
 
 [Service]
