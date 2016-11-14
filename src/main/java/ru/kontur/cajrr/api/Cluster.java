@@ -34,6 +34,7 @@ public class Cluster {
                 node.connect();
             }
             ring.setCluster(this);
+            //ring.processTokenMap(this.getTokenMap());
             connected = true;
         } catch (IOException e) {
             connected = false;
@@ -80,4 +81,9 @@ public class Cluster {
         }
     }
 
+    public Ring describeRing(String keyspace) throws Exception {
+        List<String> ranges = defaultNode().describeRing(keyspace);
+        this.ring.fillRanges(ranges);
+        return this.ring;
+    }
 }

@@ -17,9 +17,6 @@ class Token {
     private Token next;
     private List<Fragment> ranges;
 
-    private Node node;
-    private Ring ring;
-
     @JsonProperty
     public String host;
 
@@ -28,11 +25,9 @@ class Token {
         return RANGE_MAX.toString();
     }
 
-    Token(String key, Node node, Ring ring) throws Exception {
+    Token(String key, String host, Ring ring) throws Exception {
         this.key = key;
-        this.node = node;
-        this.ring = ring;
-        this.host = node.getHost();
+        this.host = host;
         if (ring.isPartitioner("RandomPartitioner")) {
             RANGE_MIN = BigInteger.ZERO;
             RANGE_MAX = new BigInteger("2").pow(127).subtract(BigInteger.ONE);
@@ -43,7 +38,6 @@ class Token {
             throw new Exception("Unsupported partitioner");
         }
         RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
-
     }
 
     private static boolean greaterThan(BigInteger a, BigInteger b) {

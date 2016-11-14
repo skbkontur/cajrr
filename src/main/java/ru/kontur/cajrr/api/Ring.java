@@ -5,8 +5,8 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
+import java.io.Console;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Ring {
@@ -17,6 +17,25 @@ public class Ring {
 
     private AtomicLong counter = new AtomicLong();
     private List<Token> tokens;
+
+    public void fillRanges(List<String> lines) throws Exception {
+        List<Range> ranges = new ArrayList<>(lines.size());
+        for(String line: lines) {
+            Range range = new Range(line);
+            ranges.add(range);
+        }
+        Collections.sort(ranges, Range::compareTo);
+        this.processRanges(ranges);
+
+    }
+
+    private void processRanges(List<Range> ranges) {
+        Map<Long, String> map = new TreeMap<>();
+        for (Range range: ranges) {
+            map.put(range.start, range.endpoints);
+        }
+        processTokenMap(map);
+    }
 
     @JsonProperty
     public List<Token> getTokens() {
@@ -32,17 +51,19 @@ public class Ring {
 
     public void setCluster(Cluster cluster) {
         this.cluster = cluster;
-        Map<String, String> map = cluster.getTokenMap();
+    }
+
+    public void processTokenMap(Map<Long, String> map) {
+
         Token first = null;
         Token prev = null;
         List<Token> result = Lists.newArrayList();
 
-        for(Map.Entry<String, String> entry: map.entrySet()) {
+        for(Map.Entry<Long, String> entry: map.entrySet()) {
             try {
-                String endpoint = entry.getValue();
-                Node node = cluster.findNode(endpoint);
-
-                Token token = new Token(entry.getKey(), node, this);
+                String endpoints = entry.getValue();
+                String key = entry.getKey().toString();
+                Token token = new Token(key, endpoints, this);
                 if(prev==null) {
                     first = token;
                     prev = token;

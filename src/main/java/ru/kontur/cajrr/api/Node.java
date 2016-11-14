@@ -125,4 +125,13 @@ public class Node {
         jmxc.addConnectionNotificationListener(observer, null, null);
         ssProxy.addNotificationListener(observer, null, null);
     }
+
+    public List<String> describeRing(String keyspace) {
+        try {
+            return ssProxy.describeRingJMX(keyspace);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
