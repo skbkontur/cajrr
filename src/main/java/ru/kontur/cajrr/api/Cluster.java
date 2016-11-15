@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.tools.RepairObserver;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Cluster {
     private boolean connected = false;
@@ -33,8 +31,6 @@ public class Cluster {
             for(Node node: nodes) {
                 node.connect();
             }
-            ring.setCluster(this);
-            //ring.processTokenMap(this.getTokenMap());
             connected = true;
         } catch (IOException e) {
             connected = false;
@@ -42,8 +38,15 @@ public class Cluster {
         }
     }
 
-    Map<String,String> getTokenMap() {
-        return defaultNode().getTokenToEndpointMap();
+    private Map<Long,String> getTokenMap() {
+        Map<String, String> map = defaultNode().getTokenToEndpointMap();
+        Map<Long, String> result = new TreeMap<>();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            Long key = Long.parseLong(entry.getKey());
+            String value = entry.getValue();
+            result.put(key, value);
+        }
+        return result;
     }
 
     private Node defaultNode() {
@@ -54,7 +57,7 @@ public class Cluster {
         return defaultNode().getPartitioner();
     }
 
-    Node findNode(String endpoint) {
+    private Node findNode(String endpoint) {
 
         for(Node node: nodes) {
             if (node.getHost().equals(endpoint)) {
@@ -85,5 +88,11 @@ public class Cluster {
         List<String> ranges = defaultNode().describeRing(keyspace);
         this.ring.fillRanges(ranges);
         return this.ring;
+    }
+
+    public Ring getRing() {
+        ring.setCluster(this);
+        ring.processTokenMap(this.getTokenMap());
+        return ring;
     }
 }

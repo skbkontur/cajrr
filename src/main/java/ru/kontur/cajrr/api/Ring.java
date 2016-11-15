@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Console;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -17,6 +18,11 @@ public class Ring {
 
     private AtomicLong counter = new AtomicLong();
     private List<Token> tokens;
+
+    public  BigInteger RANGE_MIN;
+
+    public  BigInteger RANGE_MAX;
+    public  BigInteger RANGE_SIZE;
 
     public void fillRanges(List<String> lines) throws Exception {
         List<Range> ranges = new ArrayList<>(lines.size());
@@ -51,10 +57,20 @@ public class Ring {
 
     public void setCluster(Cluster cluster) {
         this.cluster = cluster;
+        String partitioner = cluster.getPartitioner();
+        if(partitioner.endsWith("RandomPartitioner")) {
+            RANGE_MIN = BigInteger.ZERO;
+            RANGE_MAX = new BigInteger("2").pow(127).subtract(BigInteger.ONE);
+        } else if (partitioner.endsWith("Murmur3Partitioner")) {
+            RANGE_MIN = new BigInteger("2").pow(63).negate();
+            RANGE_MAX = new BigInteger("2").pow(63).subtract(BigInteger.ONE);
+        }
+        RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
     }
 
     public void processTokenMap(Map<Long, String> map) {
 
+        counter.set(0);
         Token first = null;
         Token prev = null;
         List<Token> result = Lists.newArrayList();
@@ -70,6 +86,7 @@ public class Ring {
                     continue;
                 }
                 prev.setNext(token);
+                prev.fragment(slices, counter);
                 result.add(prev);
                 prev = token;
             } catch (Exception e) {
@@ -80,17 +97,15 @@ public class Ring {
         prev.setNext(first);
         result.add(prev);
         tokens = result;
-        fragment();
     }
 
-    private void fragment() {
-        counter.set(0);
-        for(Token t: tokens) {
-            t.fragment(slices, counter);
-        }
+    public boolean isRandom = false;
+    public boolean isMurmur = false;
+    public boolean isRandomPartitioner() {
+        return isRandom;
     }
 
-    public Boolean isPartitioner(String name) {
-        return cluster.getPartitioner().endsWith(name);
+    public boolean isMurmur3Partitioner() {
+        return isMurmur;
     }
 }

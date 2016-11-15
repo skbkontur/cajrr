@@ -110,7 +110,14 @@ public class Node {
         return ssProxy.getTokenToEndpointMap();
     }
 
-    public String getPartitioner() { return ssProxy.getPartitionerName(); }
+    private String partitioner = null;
+
+    public String getPartitioner() {
+        if(partitioner==null) {
+            partitioner = ssProxy.getPartitionerName();
+        }
+        return partitioner;
+    }
 
     public void close() throws IOException
     {

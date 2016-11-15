@@ -25,7 +25,7 @@ public class RingResource {
     @GET
     public Ring ring(@PathParam("index") IntParam index) {
         Cluster cluster = retrieveCluster(index);
-        return cluster.ring;
+        return cluster.getRing();
     }
 
     @GET

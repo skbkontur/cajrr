@@ -13,8 +13,10 @@ class Token {
 
     private final BigInteger RANGE_MAX;
     private final BigInteger RANGE_SIZE;
+    private BigInteger start;
+    private BigInteger stop;
+    private BigInteger size;
     private String key;
-    private Token next;
     private List<Fragment> ranges;
 
     @JsonProperty
@@ -27,37 +29,27 @@ class Token {
 
     Token(String key, String host, Ring ring) throws Exception {
         this.key = key;
+        this.start = new BigInteger(key);
         this.host = host;
-        if (ring.isPartitioner("RandomPartitioner")) {
-            RANGE_MIN = BigInteger.ZERO;
-            RANGE_MAX = new BigInteger("2").pow(127).subtract(BigInteger.ONE);
-        } else if (ring.isPartitioner("Murmur3Partitioner")) {
-            RANGE_MIN = new BigInteger("2").pow(63).negate();
-            RANGE_MAX = new BigInteger("2").pow(63).subtract(BigInteger.ONE);
-        } else {
-            throw new Exception("Unsupported partitioner");
-        }
-        RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
+        RANGE_MIN = ring.RANGE_MIN;
+        RANGE_MAX = ring.RANGE_MAX;
+        RANGE_SIZE = ring.RANGE_SIZE;
     }
 
-    private static boolean greaterThan(BigInteger a, BigInteger b) {
-        return a.compareTo(b) > 0;
-    }
+
 
     void setNext(Token next) {
-        this.next = next;
+        stop = next.start;
+        size = stop.subtract(start);
+
+        if (start.compareTo(stop)>0) {
+            size = RANGE_MAX.subtract(start).add(stop.subtract(RANGE_MIN)).add(BigInteger.ONE);
+        }
     }
 
     List<Fragment> fragment(long slices, AtomicLong counter) {
         List<Fragment> result = Lists.newArrayList();
-        BigInteger start = value();
-        BigInteger stop = next.value();
 
-        BigInteger size = stop.subtract(start);
-
-        if (greaterThan(start, stop)) {
-            size = RANGE_MAX.subtract(start).add(stop.subtract(RANGE_MIN)).add(BigInteger.ONE);
-        }
 
         BigInteger[] segmentCountAndRemainder =
                 size.multiply(BigInteger.valueOf(slices)).divideAndRemainder(size);
@@ -71,7 +63,7 @@ class Token {
                     .divide(BigInteger.valueOf(segmentCount));
             BigInteger nextToken = start.add(offset);
             // Bordered values from MAX to MIN
-            if (greaterThan(nextToken, RANGE_MAX)) {
+            if (nextToken.compareTo(RANGE_MAX)>0) {
                 nextToken = nextToken.subtract(RANGE_SIZE);
             }
             endpointTokens.add(nextToken);
@@ -84,10 +76,6 @@ class Token {
         }
         ranges = result;
         return result;
-    }
-
-    private BigInteger value() {
-        return new BigInteger(key);
     }
 
     @JsonProperty
