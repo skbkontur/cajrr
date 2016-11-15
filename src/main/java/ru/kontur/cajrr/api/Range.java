@@ -2,14 +2,15 @@ package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.math.BigInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Range {
 
-    public Long start;
+    public BigInteger start;
 
-    private Long end;
+    private BigInteger end;
 
     @JsonProperty
     public String getStart() {
@@ -44,8 +45,8 @@ public class Range {
         Matcher m = p.matcher(line);
 
         if (m.find()) {
-            this.start =  Long.parseLong(m.group(1));
-            this.end = Long.parseLong(m.group(2));
+            this.start =  new BigInteger(m.group(1));
+            this.end = new BigInteger(m.group(2));
         }
     }
 

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.tools.RepairObserver;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.*;
 
 public class Cluster {
@@ -38,11 +39,11 @@ public class Cluster {
         }
     }
 
-    private Map<Long,String> getTokenMap() {
+    private Map<BigInteger,String> getTokenMap() {
         Map<String, String> map = defaultNode().getTokenToEndpointMap();
-        Map<Long, String> result = new TreeMap<>();
+        Map<BigInteger, String> result = new TreeMap<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            Long key = Long.parseLong(entry.getKey());
+            BigInteger key = new BigInteger(entry.getKey());
             String value = entry.getValue();
             result.put(key, value);
         }
@@ -84,15 +85,19 @@ public class Cluster {
         }
     }
 
-    public Ring describeRing(String keyspace) throws Exception {
+    public Ring describeRing(String keyspace) {
+        ring.setCluster(this);
         List<String> ranges = defaultNode().describeRing(keyspace);
-        this.ring.fillRanges(ranges);
-        return this.ring;
+
+        ring.processRanges(ranges);
+        return ring;
     }
 
     public Ring getRing() {
         ring.setCluster(this);
-        ring.processTokenMap(this.getTokenMap());
+        Map<BigInteger, String> map = this.getTokenMap();
+
+        ring.processTokenMap(map);
         return ring;
     }
 }

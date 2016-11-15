@@ -14,22 +14,14 @@ class Token {
     private final BigInteger RANGE_MAX;
     private final BigInteger RANGE_SIZE;
     private BigInteger start;
-    private BigInteger stop;
     private BigInteger size;
-    private String key;
     private List<Fragment> ranges;
 
     @JsonProperty
     public String host;
 
-    @JsonProperty
-    public String getMax() {
-        return RANGE_MAX.toString();
-    }
-
-    Token(String key, String host, Ring ring) throws Exception {
-        this.key = key;
-        this.start = new BigInteger(key);
+    Token(BigInteger key, String host, Ring ring) throws Exception {
+        this.start = key;
         this.host = host;
         RANGE_MIN = ring.RANGE_MIN;
         RANGE_MAX = ring.RANGE_MAX;
@@ -39,7 +31,7 @@ class Token {
 
 
     void setNext(Token next) {
-        stop = next.start;
+        BigInteger stop = next.start;
         size = stop.subtract(start);
 
         if (start.compareTo(stop)>0) {
@@ -85,6 +77,6 @@ class Token {
 
     @JsonProperty
     public String getKey() {
-        return key;
+        return start.toString();
     }
 }

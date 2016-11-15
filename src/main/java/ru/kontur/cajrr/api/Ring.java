@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Console;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -24,23 +23,24 @@ public class Ring {
     public  BigInteger RANGE_MAX;
     public  BigInteger RANGE_SIZE;
 
-    public void fillRanges(List<String> lines) throws Exception {
+    public void processRanges(List<String> lines) {
         List<Range> ranges = new ArrayList<>(lines.size());
         for(String line: lines) {
             Range range = new Range(line);
             ranges.add(range);
         }
         Collections.sort(ranges, Range::compareTo);
-        this.processRanges(ranges);
+
+        processTokenMap(convertToMap(ranges));
 
     }
 
-    private void processRanges(List<Range> ranges) {
-        Map<Long, String> map = new TreeMap<>();
+    private Map<BigInteger, String> convertToMap(List<Range> ranges) {
+        Map<BigInteger, String> map = new TreeMap<>();
         for (Range range: ranges) {
             map.put(range.start, range.endpoints);
         }
-        processTokenMap(map);
+        return map;
     }
 
     @JsonProperty
@@ -68,18 +68,17 @@ public class Ring {
         RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
     }
 
-    public void processTokenMap(Map<Long, String> map) {
+    public void processTokenMap(Map<BigInteger, String> map) {
 
         counter.set(0);
         Token first = null;
         Token prev = null;
         List<Token> result = Lists.newArrayList();
 
-        for(Map.Entry<Long, String> entry: map.entrySet()) {
+        for(Map.Entry<BigInteger, String> entry: map.entrySet()) {
             try {
                 String endpoints = entry.getValue();
-                String key = entry.getKey().toString();
-                Token token = new Token(key, endpoints, this);
+                Token token = new Token(entry.getKey(), endpoints, this);
                 if(prev==null) {
                     first = token;
                     prev = token;
