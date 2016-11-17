@@ -13,17 +13,14 @@ public class Ring {
 
     private static final Logger LOG = LoggerFactory.getLogger(Ring.class);
 
-    Cluster cluster;
-
     private AtomicLong counter = new AtomicLong();
-    private List<Token> tokens;
 
-    public  BigInteger RANGE_MIN;
+    BigInteger RANGE_MIN;
 
-    public  BigInteger RANGE_MAX;
-    public  BigInteger RANGE_SIZE;
+    BigInteger RANGE_MAX;
+    BigInteger RANGE_SIZE;
 
-    public void processRanges(List<String> lines) {
+    List<Token> getTokensFromRanges(List<String> lines) {
         List<Range> ranges = new ArrayList<>(lines.size());
         for(String line: lines) {
             Range range = new Range(line);
@@ -31,32 +28,20 @@ public class Ring {
         }
         Collections.sort(ranges, Range::compareTo);
 
-        processTokenMap(convertToMap(ranges));
+        return getTokensFromMap(convertToMap(ranges));
 
     }
 
     private Map<BigInteger, String> convertToMap(List<Range> ranges) {
         Map<BigInteger, String> map = new TreeMap<>();
-        for (Range range: ranges) {
-            map.put(range.start, range.endpoints);
-        }
+        for (Range range: ranges) map.put(range.start, range.endpoints);
         return map;
     }
 
-    @JsonProperty
-    public List<Token> getTokens() {
-        return tokens;
-    }
+    int slices = 1;
 
-    @JsonProperty
-    public int slices = 1;
-
-    public Ring() {
-        // Deserializer
-    }
-
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
+    Ring(Cluster cluster, int slices) {
+        this.slices = slices;
         String partitioner = cluster.getPartitioner();
         if(partitioner.endsWith("RandomPartitioner")) {
             RANGE_MIN = BigInteger.ZERO;
@@ -68,7 +53,7 @@ public class Ring {
         RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
     }
 
-    public void processTokenMap(Map<BigInteger, String> map) {
+    List<Token> getTokensFromMap(Map<BigInteger, String> map) {
 
         counter.set(0);
         Token first = null;
@@ -79,7 +64,7 @@ public class Ring {
             try {
                 String endpoints = entry.getValue();
                 Token token = new Token(entry.getKey(), endpoints, this);
-                if(prev==null) {
+                if (prev == null) {
                     first = token;
                     prev = token;
                     continue;
@@ -94,17 +79,8 @@ public class Ring {
         }
         assert prev != null;
         prev.setNext(first);
+        prev.fragment(slices, counter);
         result.add(prev);
-        tokens = result;
-    }
-
-    public boolean isRandom = false;
-    public boolean isMurmur = false;
-    public boolean isRandomPartitioner() {
-        return isRandom;
-    }
-
-    public boolean isMurmur3Partitioner() {
-        return isMurmur;
+        return result;
     }
 }

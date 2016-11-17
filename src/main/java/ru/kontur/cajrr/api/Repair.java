@@ -1,6 +1,8 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.cassandra.repair.RepairParallelism;
+import org.apache.cassandra.repair.messages.RepairOption;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.tools.RepairObserver;
 
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,25 +27,36 @@ public class Repair {
     public long id;
 
     @JsonProperty
+    public int cluster;
+
+    @JsonProperty
     public String keyspace;
 
     @JsonProperty
-    public Fragment fragment;
+    public String tables;
+
+    @JsonProperty
+    public String start;
+
+    @JsonProperty
+    public String end;
 
     @JsonProperty
     public String callback;
 
     @JsonProperty
-    public String T1;
+    public String endpoint;
 
     @JsonProperty
-    public String T2;
+    public String command;
+
+    @JsonProperty
+    public String started;
+
 
     private RepairStatus status;
 
     private static final HttpClient httpClient = HttpClients.createDefault();
-
-
 
     private static final Logger LOG = LoggerFactory.getLogger(Repair.class);
 
@@ -53,6 +67,7 @@ public class Repair {
 
     public InputStream progress(ProgressEvent event, boolean sendProgress) throws Exception {
         status.populate(event);
+        status.started = started;
 
         //Execute and get the response.
         InputStream result = null;
@@ -86,8 +101,18 @@ public class Repair {
 
     public Map<String,String> getOptions() {
         Map<String, String> result = new HashMap<>();
-        result.put("ranges", fragment.toString());
+        result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.PARALLEL));
+        result.put(RepairOption.HOSTS_KEY, endpoint);
+        if(!tables.equals("") && !tables.equals("*")) {
+            result.put(RepairOption.COLUMNFAMILIES_KEY, tables);
+        }
+        result.put(RepairOption.RANGES_KEY, String.format("%s:%s", start, end));
         return result;
+    }
+
+    String GetProxyNode() {
+        String[] parts = endpoint.split(",");
+        return parts[0].trim();
     }
 }
 

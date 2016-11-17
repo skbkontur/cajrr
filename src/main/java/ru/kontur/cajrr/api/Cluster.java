@@ -1,6 +1,7 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.jersey.params.IntParam;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.slf4j.Logger;
@@ -16,9 +17,6 @@ public class Cluster {
 
     @JsonProperty
     public String name;
-
-    @JsonProperty
-    public Ring ring;
 
     @JsonProperty
     public List<Node> nodes;
@@ -74,7 +72,7 @@ public class Cluster {
 
     public void registerRepair(Repair repair) throws Exception {
         activeRepairs.put(repair.id, repair);
-        Node proxy = findNode(repair.fragment.endpoint);
+        Node proxy = findNode(repair.GetProxyNode());
         RepairObserver observer = new RepairObserver(repair, proxy);
         try {
             proxy.addListener(observer);
@@ -85,19 +83,18 @@ public class Cluster {
         }
     }
 
-    public Ring describeRing(String keyspace) {
-        ring.setCluster(this);
+    public List<Token> describeRing(String keyspace, int slices) {
+        Ring ring = new Ring(this, slices);
         List<String> ranges = defaultNode().describeRing(keyspace);
 
-        ring.processRanges(ranges);
-        return ring;
+        return ring.getTokensFromRanges(ranges);
+
     }
 
-    public Ring getRing() {
-        ring.setCluster(this);
+    public List<Token> getRing() {
+        Ring ring = new Ring(this, 1);
         Map<BigInteger, String> map = this.getTokenMap();
 
-        ring.processTokenMap(map);
-        return ring;
+        return ring.getTokensFromMap(map);
     }
 }

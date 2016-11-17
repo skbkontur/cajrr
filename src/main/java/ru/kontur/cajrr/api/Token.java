@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-class Token {
+public class Token {
 
     private final BigInteger RANGE_MIN;
 

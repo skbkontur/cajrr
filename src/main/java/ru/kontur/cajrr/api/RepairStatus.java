@@ -21,6 +21,9 @@ public class RepairStatus {
     public String end;
 
     @JsonProperty
+    public String started;
+
+    @JsonProperty
     public String message;
 
     @JsonProperty
@@ -39,6 +42,26 @@ public class RepairStatus {
     public String type;
 
     private Repair repair;
+
+    @JsonProperty
+    public long getId() {
+        return repair.id;
+    }
+
+    @JsonProperty
+    public int getCluster() {
+        return  repair.cluster;
+    }
+
+    @JsonProperty
+    public String getKeyspace() {
+        return repair.keyspace;
+    }
+
+    @JsonProperty
+    public String getTables() {
+        return repair.tables;
+    }
 
     @JsonProperty
     public Repair getRepair() {

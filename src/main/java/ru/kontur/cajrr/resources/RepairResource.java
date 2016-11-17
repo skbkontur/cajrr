@@ -18,12 +18,8 @@ public class RepairResource {
 
     private final AppConfiguration config;
 
-    private final AtomicLong counter = new AtomicLong();
-
-
     public RepairResource(AppConfiguration config) {
         this.config = config;
-        counter.set(0);
     }
 
     @POST
@@ -38,8 +34,6 @@ public class RepairResource {
             throw new NotFoundException();
         }
         Cluster cluster = config.clusters.get(index.get());
-        repair.id = counter.incrementAndGet();
-
         cluster.registerRepair(repair);
 
         return repair;
