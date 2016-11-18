@@ -11,9 +11,7 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.IOException;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Node {
 
@@ -60,6 +58,7 @@ public class Node {
 
     private JMXConnector jmxc;
     private StorageServiceMBean ssProxy;
+    private MBeanServerConnection mbeanServerConn;
 
     Cluster cluster;
     List<Token> tokens;
@@ -82,7 +81,7 @@ public class Node {
         env.put("com.sun.jndi.rmi.factory.socket", getRMIClientSocketFactory());
 
         jmxc = JMXConnectorFactory.connect(jmxUrl, env);
-        MBeanServerConnection mbeanServerConn = jmxc.getMBeanServerConnection();
+        mbeanServerConn = jmxc.getMBeanServerConnection();
 
         try
         {
@@ -137,6 +136,22 @@ public class Node {
         try {
             return ssProxy.describeRingJMX(keyspace);
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<String> getTables(String keyspace) {
+        List<String> result = new ArrayList<>();
+        try {
+            ObjectName oName = new ObjectName( String.format("org.apache.cassandra.db:type=ColumnFamilies,keyspace=%s,columnfamily=*", keyspace));
+            Set<ObjectName> names = mbeanServerConn.queryNames( oName, null);
+            for (ObjectName name: names) {
+                 String sName = name.getKeyProperty("columnfamily");
+                 result.add(sName);
+            }
+            return result;
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

@@ -97,4 +97,8 @@ public class Cluster {
 
         return ring.getTokensFromMap(map);
     }
+
+    public List<String> getTables(String keyspace) {
+        return defaultNode().getTables(keyspace);
+    }
 }
