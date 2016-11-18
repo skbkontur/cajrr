@@ -23,7 +23,7 @@ public class RingResource {
     }
 
     @GET
-    public List<Token> ring(@PathParam("index") IntParam index) {
+    public List<Token> ring(@PathParam("index") NonEmptyStringParam index) {
         Cluster cluster = retrieveCluster(index);
         return cluster.getRing();
     }
@@ -31,7 +31,7 @@ public class RingResource {
     @GET
     @Path("/describe/{keyspace}/{slices}")
     public List<Token> describe(
-            @PathParam("index") IntParam index,
+            @PathParam("index") NonEmptyStringParam index,
             @PathParam("keyspace") NonEmptyStringParam keyspace,
             @PathParam("slices") IntParam slices
     ) throws Exception {
@@ -48,11 +48,17 @@ public class RingResource {
         return ks.get();
     }
 
-    private Cluster retrieveCluster(IntParam ind) {
-        int index = ind.get();
-        if(index<0 || index >= config.clusters.size()) {
+    private Cluster retrieveCluster(NonEmptyStringParam ind) {
+        Optional<String> index = ind.get();
+        if(!index.isPresent()) {
             throw new NotFoundException();
         }
-        return config.clusters.get(index);
+        for (Cluster cluster :
+                config.clusters) {
+            if(cluster.name.equals(index.get())) {
+                return cluster;
+            }
+        }
+        throw new NotFoundException();
     }
 }

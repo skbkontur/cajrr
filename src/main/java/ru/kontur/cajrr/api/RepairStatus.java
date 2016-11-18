@@ -49,8 +49,8 @@ public class RepairStatus {
     }
 
     @JsonProperty
-    public int getCluster() {
-        return  repair.cluster;
+    public String getCluster() {
+        return repair.cluster;
     }
 
     @JsonProperty

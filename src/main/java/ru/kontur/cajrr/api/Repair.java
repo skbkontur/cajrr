@@ -27,7 +27,7 @@ public class Repair {
     public long id;
 
     @JsonProperty
-    public int cluster;
+    public String cluster;
 
     @JsonProperty
     public String keyspace;
