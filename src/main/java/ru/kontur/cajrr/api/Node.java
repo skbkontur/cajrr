@@ -158,6 +158,6 @@ public class Node {
     }
 
     public List<String> getKeyspaces() {
-        return ssProxy.getKeyspaces();
+        return ssProxy.getNonSystemKeyspaces();
     }
 }
