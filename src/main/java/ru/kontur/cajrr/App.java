@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.api.Cluster;
 import ru.kontur.cajrr.health.RepairHealthCheck;
+import ru.kontur.cajrr.resources.KeyspaceResource;
 import ru.kontur.cajrr.resources.RepairResource;
 import ru.kontur.cajrr.resources.RingResource;
 import ru.kontur.cajrr.resources.TableResource;
@@ -50,11 +51,13 @@ public class App extends Application<AppConfiguration>
         final RingResource ringResource = new RingResource(configuration);
         final RepairResource repairResource = new RepairResource(configuration);
         final TableResource tableResource = new TableResource(configuration);
-        final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration);
+        final KeyspaceResource keyspaceResource = new KeyspaceResource(configuration);
 
+        final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration);
         environment.healthChecks().register("repair", healthCheck);
         environment.jersey().register(repairResource);
         environment.jersey().register(tableResource);
         environment.jersey().register(ringResource);
+        environment.jersey().register(keyspaceResource);
     }
 }

@@ -156,4 +156,8 @@ public class Node {
         }
         return null;
     }
+
+    public List<String> getKeyspaces() {
+        return ssProxy.getKeyspaces();
+    }
 }

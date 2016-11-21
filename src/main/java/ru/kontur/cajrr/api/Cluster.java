@@ -98,6 +98,10 @@ public class Cluster {
         return ring.getTokensFromMap(map);
     }
 
+    public List<String> getKeyspaces() {
+        return defaultNode().getKeyspaces();
+    }
+
     public List<String> getTables(String keyspace) {
         return defaultNode().getTables(keyspace);
     }
