@@ -17,12 +17,8 @@ public class Token {
     private BigInteger size;
     private List<Fragment> ranges;
 
-    @JsonProperty
-    public String host;
-
-    Token(BigInteger key, String host, Ring ring) throws Exception {
+    Token(BigInteger key,  Ring ring) throws Exception {
         this.start = key;
-        this.host = host;
         RANGE_MIN = ring.RANGE_MIN;
         RANGE_MAX = ring.RANGE_MAX;
         RANGE_SIZE = ring.RANGE_SIZE;
@@ -63,7 +59,6 @@ public class Token {
 
         for (int j = 0; j < segmentCount; j++) {
             Fragment frag = new Fragment(counter.incrementAndGet(), endpointTokens.get(j), endpointTokens.get(j + 1));
-            frag.endpoint = host;
             result.add(frag);
         }
         ranges = result;

@@ -6,13 +6,15 @@ import java.math.BigInteger;
 
 class Fragment {
 
-    private long id;
+    @JsonProperty
+    public long id;
+
+    @JsonProperty
+    public String endpoint;
 
     private BigInteger start;
     private BigInteger end;
 
-    @JsonProperty
-    public String endpoint;
 
     public Fragment() {
         // JSON
@@ -30,11 +32,6 @@ class Fragment {
     }
 
     @JsonProperty
-    public long getId() {
-        return id;
-    }
-
-    @JsonProperty
     public String getStart() {
         return start.toString();
     }
@@ -42,11 +39,6 @@ class Fragment {
     @JsonProperty
     public String getEnd() {
         return end.toString();
-    }
-
-    @JsonProperty
-    public void setId(long id) {
-        this.id = id;
     }
 
     @JsonProperty

@@ -8,20 +8,9 @@ import java.util.regex.Pattern;
 
 public class RepairStatus {
 
-    @JsonProperty
-    public int command;
 
     @JsonProperty
-    public int count;
-
-    @JsonProperty
-    public int duration;
-
-    @JsonProperty
-    public String end;
-
-    @JsonProperty
-    public String started;
+    public Integer command;
 
     @JsonProperty
     public String message;
@@ -33,57 +22,22 @@ public class RepairStatus {
     public String session;
 
     @JsonProperty
-    public String start;
-
-    @JsonProperty
-    public int total;
-
-    @JsonProperty
     public String type;
 
+
     private Repair repair;
-
-    @JsonProperty
-    public long getId() {
-        return repair.id;
-    }
-
-    @JsonProperty
-    public String getCluster() {
-        return repair.cluster;
-    }
-
-    @JsonProperty
-    public String getKeyspace() {
-        return repair.keyspace;
-    }
-
-    @JsonProperty
-    public String getTables() {
-        return repair.tables;
-    }
 
     @JsonProperty
     public Repair getRepair() {
         return repair;
     }
 
-
-
-    public RepairStatus() {
-        // Jackson deserialization
-    }
-
-    public RepairStatus(Repair repair) {
+    RepairStatus(Repair repair) {
         this.repair = repair;
     }
 
-
-
-    public void populate(ProgressEvent event) {
+    void populate(ProgressEvent event) {
         this.type = event.getType().toString();
-        this.count = event.getProgressCount();
-        this.total = event.getTotal();
         setMessage(event.getMessage());
 
     }
@@ -144,8 +98,6 @@ public class RepairStatus {
 
         if (m.find()) {
             this.session = m.group(1);
-            this.start = m.group(2);
-            this.end = m.group(3);
             this.message = "Repair session " + m.group(4);
         }
     }

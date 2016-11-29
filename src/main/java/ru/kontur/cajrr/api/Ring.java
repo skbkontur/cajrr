@@ -63,7 +63,7 @@ public class Ring {
         for(Map.Entry<BigInteger, String> entry: map.entrySet()) {
             try {
                 String endpoints = entry.getValue();
-                Token token = new Token(entry.getKey(), endpoints, this);
+                Token token = new Token(entry.getKey(), this);
                 if (prev == null) {
                     first = token;
                     prev = token;

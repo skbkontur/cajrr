@@ -60,9 +60,6 @@ public class Node {
     private StorageServiceMBean ssProxy;
     private MBeanServerConnection mbeanServerConn;
 
-    Cluster cluster;
-    List<Token> tokens;
-
     /**
      * Create a connection to the JMX agent and setup the M[X]Bean proxies.
      *
@@ -127,10 +124,20 @@ public class Node {
         return ssProxy.repairAsync(keyspace, options);
     }
 
-    public void addListener(NotificationListener observer) {
+    void addListener(NotificationListener observer) {
         jmxc.addConnectionNotificationListener(observer, null, null);
         ssProxy.addNotificationListener(observer, null, null);
     }
+
+     void removeListener(NotificationListener observer) {
+        try {
+            jmxc.removeConnectionNotificationListener(observer, null, null);
+            ssProxy.removeNotificationListener(observer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public List<String> describeRing(String keyspace) {
         try {
@@ -159,5 +166,8 @@ public class Node {
 
     public List<String> getKeyspaces() {
         return ssProxy.getNonSystemKeyspaces();
+    }
+
+    public void removeListener(Repair repair) {
     }
 }

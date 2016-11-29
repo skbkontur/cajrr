@@ -1,12 +1,10 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.jersey.params.IntParam;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.kontur.cajrr.tools.RepairObserver;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -20,8 +18,6 @@ public class Cluster {
 
     @JsonProperty
     public List<Node> nodes;
-
-    private Map<Long, Repair> activeRepairs = new HashMap<>();
 
     private static final Logger LOG = LoggerFactory.getLogger(Repair.class);
 
@@ -71,15 +67,12 @@ public class Cluster {
     }
 
     public void registerRepair(Repair repair) throws Exception {
-        activeRepairs.put(repair.id, repair);
-        Node proxy = findNode(repair.GetProxyNode());
-        RepairObserver observer = new RepairObserver(repair, proxy);
+        Node proxy = findNode(repair.getProxyNode());
         try {
-            proxy.addListener(observer);
-            observer.run();
+            proxy.addListener(repair);
+            repair.run(proxy);
         }   catch (Exception e) {
             LOG.error(e.getMessage());
-            repair.progress(new ProgressEvent(ProgressEventType.ERROR, 0, 0, e.getMessage()), false);
         }
     }
 

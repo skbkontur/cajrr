@@ -27,24 +27,17 @@ public class RepairResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
-    @Path("/{index}")
-    public Repair repairFragment(
-            @PathParam("index") NonEmptyStringParam index,
-            Repair repair) throws Exception {
+    public Repair repairFragment(Repair repair) throws Exception {
 
-        Cluster cluster = retrieveCluster(index);
+        Cluster cluster = retrieveCluster(repair.cluster);
         cluster.registerRepair(repair);
 
         return repair;
     }
-    private Cluster retrieveCluster(NonEmptyStringParam ind) {
-        Optional<String> index = ind.get();
-        if(!index.isPresent()) {
-            throw new NotFoundException();
-        }
+    private Cluster retrieveCluster(String index) {
         for (Cluster cluster :
                 config.clusters) {
-            if(cluster.name.equals(index.get())) {
+            if(cluster.name.equals(index)) {
                 return cluster;
             }
         }
