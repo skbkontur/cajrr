@@ -64,6 +64,7 @@ public class Ring {
             try {
                 String endpoints = entry.getValue();
                 Token token = new Token(entry.getKey(), this);
+                token.endpoint = endpoints;
                 if (prev == null) {
                     first = token;
                     prev = token;

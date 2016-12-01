@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Token {
 
+    @JsonProperty
+    public String endpoint;
+
     private final BigInteger RANGE_MIN;
 
     private final BigInteger RANGE_MAX;
@@ -59,6 +62,7 @@ public class Token {
 
         for (int j = 0; j < segmentCount; j++) {
             Fragment frag = new Fragment(counter.incrementAndGet(), endpointTokens.get(j), endpointTokens.get(j + 1));
+            frag.endpoint = this.endpoint;
             result.add(frag);
         }
         ranges = result;

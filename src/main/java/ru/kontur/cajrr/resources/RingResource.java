@@ -37,7 +37,8 @@ public class RingResource {
     ) throws Exception {
         Cluster cluster = retrieveCluster(index);
         String ks = retrieveKeyspace(keyspace);
-        return cluster.describeRing(ks, slices.get());
+        List<Token> result = cluster.describeRing(ks, slices.get());
+        return result;
     }
 
     private String retrieveKeyspace(NonEmptyStringParam keyspace) {
