@@ -9,6 +9,8 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
 import java.util.*;
@@ -22,7 +24,16 @@ public class Node {
 
     @JsonProperty
     public String getHost() {
-        return host;
+        InetAddress address = null;
+        String result = "";
+        try {
+            address = InetAddress.getByName(host);
+            result = address.getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            result = host;
+        }
+        return result;
     }
 
     @JsonProperty

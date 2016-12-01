@@ -68,7 +68,7 @@ public class Repair extends JMXNotificationProgressListener {
 
     @Override
     public boolean isInterestedIn(String tag) {
-        return tag.equals("repair:" + cmd);
+        return false;
     }
 
     void run(Node proxy) throws Exception
@@ -91,16 +91,18 @@ public class Repair extends JMXNotificationProgressListener {
         switch (notification.getType())
         {
             case "progress":
-                String tag = (String) notification.getSource();
-                if (this.isInterestedIn(tag))
+                String tag = notification.getSource().toString();
+                if (tag.equals("repair:" + cmd))
                 {
-                    Map<String, Integer> progress = (Map<String, Integer>) notification.getUserData();
-                    String message = notification.getMessage();
-                    ProgressEvent event = new ProgressEvent(ProgressEventType.values()[progress.get("type")],
+                    new Thread(() -> {
+                        Map<String, Integer> progress = (Map<String, Integer>) notification.getUserData();
+                        String message = notification.getMessage();
+                        ProgressEvent event = new ProgressEvent(ProgressEventType.values()[progress.get("type")],
                             progress.get("progressCount"),
                             progress.get("total"),
                             message);
-                    this.progress(tag, event);
+                        this.progress(tag, event);
+                    }).start();
                 }
                 break;
 
@@ -143,6 +145,7 @@ public class Repair extends JMXNotificationProgressListener {
     Map<String,String> getOptions() {
         Map<String, String> result = new HashMap<>();
         result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.SEQUENTIAL));
+        result.put(RepairOption.JOB_THREADS_KEY, Integer.toString(2));
         result.put(RepairOption.HOSTS_KEY, endpoint);
         if(!table.equals("") && !table.equals("*")) {
             result.put(RepairOption.COLUMNFAMILIES_KEY, table);
