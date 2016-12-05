@@ -57,18 +57,16 @@ public class Repair extends JMXNotificationProgressListener {
 
     private final Condition condition = new SimpleCondition();
 
-    private static final HttpClient httpClient = HttpClients.createDefault();
 
     private static final Logger LOG = LoggerFactory.getLogger(Repair.class);
 
     public Repair() {
-
-        status = new RepairStatus(this);
+        // JSON deserializer
     }
 
     @Override
     public boolean isInterestedIn(String tag) {
-        return false;
+        return tag.equals("repair:" + cmd);
     }
 
     void run(Node proxy) throws Exception
@@ -86,66 +84,15 @@ public class Repair extends JMXNotificationProgressListener {
         proxy.removeListener(this);
     }
 
-    public void handleNotification(Notification notification, Object handback)
-    {
-        switch (notification.getType())
-        {
-            case "progress":
-                String tag = notification.getSource().toString();
-                if (tag.equals("repair:" + cmd))
-                {
-                    new Thread(() -> {
-                        Map<String, Integer> progress = (Map<String, Integer>) notification.getUserData();
-                        String message = notification.getMessage();
-                        ProgressEvent event = new ProgressEvent(ProgressEventType.values()[progress.get("type")],
-                            progress.get("progressCount"),
-                            progress.get("total"),
-                            message);
-                        this.progress(tag, event);
-                    }).start();
-                }
-                break;
-
-            case JMXConnectionNotification.NOTIFS_LOST:
-                handleNotificationLost(notification.getTimeStamp(), notification.getMessage());
-                break;
-
-            case JMXConnectionNotification.FAILED:
-                handleConnectionFailed(notification.getTimeStamp(), notification.getMessage());
-                break;
-
-            case JMXConnectionNotification.CLOSED:
-                handleConnectionClosed(notification.getTimeStamp(), notification.getMessage());
-                break;
-        }
-    }
-
-    private InputStream reportStatus(String callback, RepairStatus status)  throws Exception {
-        HttpPost httppost = new HttpPost(callback);
-
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonString = mapper.writeValueAsString(status);
-        httppost.setEntity(new StringEntity(jsonString, "UTF8"));
-        httppost.setHeader("Content-type", "application/json");
-
-
-        HttpResponse response = httpClient.execute(httppost);
-        HttpEntity entity = response.getEntity();
-
-        if (entity != null) {
-            try (InputStream instream = entity.getContent()) {
-                instream.close();
-                return instream;
-            }
-        }
-        return null;
+    private void reportStatus(ProgressEvent event)  throws Exception {
+        RepairStatus status = new RepairStatus(this);
+        status.report(event, callback);
     }
 
 
     Map<String,String> getOptions() {
         Map<String, String> result = new HashMap<>();
         result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.SEQUENTIAL));
-        result.put(RepairOption.JOB_THREADS_KEY, Integer.toString(2));
         result.put(RepairOption.HOSTS_KEY, endpoint);
         if(!table.equals("") && !table.equals("*")) {
             result.put(RepairOption.COLUMNFAMILIES_KEY, table);
@@ -162,18 +109,20 @@ public class Repair extends JMXNotificationProgressListener {
     @Override
     public void progress(String tag, ProgressEvent event)
     {
-        try {
-            status.populate(event);
-            reportStatus(callback, status);
+        new Thread(tag) {
+            public void run() {
+                try {
+                    reportStatus(event);
 
-            ProgressEventType type = event.getType();
-            if (type == ProgressEventType.COMPLETE)
-            {
-                condition.signalAll();
+                    ProgressEventType type = event.getType();
+                    if (type.equals(ProgressEventType.COMPLETE)) {
+                        condition.signalAll();
+                    }
+                } catch (Exception e) {
+                    condition.signalAll();
+                }
             }
-        } catch (Exception e) {
-            condition.signalAll();
-        }
+        }.start();
     }
 }
 

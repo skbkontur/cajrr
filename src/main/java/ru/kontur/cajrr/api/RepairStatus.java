@@ -2,7 +2,13 @@ package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.cassandra.utils.progress.ProgressEvent;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +31,10 @@ public class RepairStatus {
     public String type;
 
 
+    private static HttpClient httpClient = HttpClients.createDefault();
+
+    private static ObjectMapper mapper = new ObjectMapper();
+
     private Repair repair;
 
     @JsonProperty
@@ -34,12 +44,6 @@ public class RepairStatus {
 
     RepairStatus(Repair repair) {
         this.repair = repair;
-    }
-
-    void populate(ProgressEvent event) {
-        this.type = event.getType().toString();
-        setMessage(event.getMessage());
-
     }
 
     private void setMessage(String message) {
@@ -99,6 +103,23 @@ public class RepairStatus {
         if (m.find()) {
             this.session = m.group(1);
             this.message = "Repair session " + m.group(4);
+        }
+    }
+
+    public void report(ProgressEvent event, String callback) throws IOException {
+
+        this.type = event.getType().toString();
+        setMessage(event.getMessage());
+
+        if(this.type.equals("COMPLETE")) {
+            HttpPost httppost = new HttpPost(callback);
+
+            String jsonString = mapper.writeValueAsString(this);
+            StringEntity entity = new StringEntity(jsonString, "UTF8");
+            httppost.setEntity(entity);
+            httppost.setHeader("Content-type", "application/json");
+
+            httpClient.execute(httppost);
         }
     }
 }
