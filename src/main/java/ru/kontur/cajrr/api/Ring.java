@@ -21,7 +21,7 @@ public class Ring {
     BigInteger RANGE_SIZE;
 
     List<Token> getTokensFromRanges(List<String> lines) {
-        List<Range> ranges = new ArrayList<>(lines.size());
+        List<Range> ranges = new ArrayList<>();
         for(String line: lines) {
             Range range = new Range(line);
             ranges.add(range);
