@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AppConfiguration extends Configuration {
+    @JsonProperty
+    public String callback = "localhost:8888";
 
     @JsonProperty
     public List<Cluster> clusters = new ArrayList<>();

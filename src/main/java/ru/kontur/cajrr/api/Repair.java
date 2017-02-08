@@ -50,7 +50,6 @@ public class Repair extends JMXNotificationProgressListener {
     @JsonProperty
     public String table;
 
-    @JsonProperty
     public String callback;
 
     private RepairStatus status;

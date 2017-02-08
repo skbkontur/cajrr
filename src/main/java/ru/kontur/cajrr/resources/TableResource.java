@@ -5,6 +5,7 @@ import io.dropwizard.jersey.params.IntParam;
 import io.dropwizard.jersey.params.NonEmptyStringParam;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Cluster;
+import ru.kontur.cajrr.api.Table;
 import ru.kontur.cajrr.api.Token;
 
 import javax.ws.rs.*;
@@ -23,7 +24,7 @@ public class TableResource {
     }
 
     @GET
-    public List<String> tables(
+    public List<Table> tables(
             @PathParam("index") NonEmptyStringParam index,
             @PathParam("keyspace") NonEmptyStringParam keyspace) {
         Cluster cluster = retrieveCluster(index);

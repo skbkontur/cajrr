@@ -29,6 +29,8 @@ public class RepairResource {
     @Timed
     public Repair repairFragment(Repair repair) throws Exception {
 
+        repair.callback = config.callback;
+
         Cluster cluster = retrieveCluster(repair.cluster);
         cluster.registerRepair(repair);
 

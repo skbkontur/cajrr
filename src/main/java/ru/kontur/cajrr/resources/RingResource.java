@@ -2,6 +2,7 @@ package ru.kontur.cajrr.resources;
 
 
 import io.dropwizard.jersey.params.IntParam;
+import io.dropwizard.jersey.params.LongParam;
 import io.dropwizard.jersey.params.NonEmptyStringParam;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Cluster;

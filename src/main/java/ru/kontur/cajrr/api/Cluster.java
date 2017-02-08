@@ -1,8 +1,7 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.cassandra.utils.progress.ProgressEvent;
-import org.apache.cassandra.utils.progress.ProgressEventType;
+import javafx.scene.control.Tab;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +10,8 @@ import java.math.BigInteger;
 import java.util.*;
 
 public class Cluster {
+    private final int COMBINATION_THRESHOLD = 10000;
+
     private boolean connected = false;
 
     @JsonProperty
@@ -95,7 +96,53 @@ public class Cluster {
         return defaultNode().getKeyspaces();
     }
 
-    public List<String> getTables(String keyspace) {
-        return defaultNode().getTables(keyspace);
+    public List<Table> getTables(String keyspace) {
+        List<Table> tables = defaultNode().getTables(keyspace);
+        tables = combineZerosizedTables(tables);
+        tables = calculateTableWeights(tables);
+        Collections.sort(tables);
+        return tables;
     }
+
+    private List<Table> combineZerosizedTables(List<Table> tables) {
+        List<Table> result = new ArrayList<>();
+        List<String> emptyNames = new ArrayList<>();
+        long zeroSize = 0;
+        for (Table table: tables) {
+            if(table.size>COMBINATION_THRESHOLD) {
+                result.add(table);
+            } else {
+                emptyNames.add(table.name);
+                zeroSize += table.size;
+            }
+        }
+        if(emptyNames.size()>0) {
+            String emptyName = String.join(",", emptyNames);
+            Table emptyTable = new Table(emptyName, zeroSize);
+            result.add(emptyTable);
+        }
+        return result;
+    }
+
+    private List<Table> calculateTableWeights(List<Table> tables) {
+        long max = findMaxSize(tables);
+
+        for (Table table:tables) {
+            if (max!=0) {
+                double weight = table.size / (double) max;
+                table.setWeight(weight);
+            }
+        }
+        return tables;
+    }
+
+    private long findMaxSize(List<Table> tables) {
+        long max = 0;
+        for (Table table:tables) {
+            max = table.size>max ? table.size : max;
+        }
+        return max;
+    }
+
+
 }

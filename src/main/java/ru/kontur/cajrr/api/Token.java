@@ -38,7 +38,7 @@ public class Token {
         }
     }
 
-    List<Fragment> fragment(long slices, AtomicLong counter) {
+    List<Fragment> fragment(int slices, AtomicLong counter) {
         List<Fragment> result = Lists.newArrayList();
 
 

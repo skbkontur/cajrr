@@ -1,7 +1,6 @@
+callback: http://localhost:8888/status
 clusters:
   - name: Test cluster
-    ring:
-      slices: 10
     nodes:
       - host: 172.16.238.10
         port: 7199
@@ -16,6 +15,13 @@ logging:
     org.eclipse.jetty: DEBUG
   appenders:
     - type: console
+#    - type: file
+#      currentLogFilename: /var/log/cajrr/cajrr.log
+#      threshold: ALL
+#      archive: true
+#      archivedLogFilenamePattern: /var/log/cajrr/cajrr-%d.log
+#      archivedFileCount: 5
+#      timeZone: Asia/Yekaterinburg
       logFormat: "%-6level [%d] [%t] %logger{5} - %msg %n"
 
 #metrics:

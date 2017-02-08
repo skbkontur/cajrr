@@ -1,6 +1,7 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import javafx.scene.control.Tab;
 import org.apache.cassandra.service.StorageServiceMBean;
 
 import javax.management.*;
@@ -14,6 +15,9 @@ import java.net.UnknownHostException;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
 import java.util.*;
+
+import static javax.management.JMX.newMBeanProxy;
+import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 
 public class Node {
 
@@ -91,10 +95,11 @@ public class Node {
         jmxc = JMXConnectorFactory.connect(jmxUrl, env);
         mbeanServerConn = jmxc.getMBeanServerConnection();
 
+
         try
         {
             ObjectName name = new ObjectName(ssObjName);
-            ssProxy = JMX.newMBeanProxy(mbeanServerConn, name, StorageServiceMBean.class);
+            ssProxy = newMBeanProxy(mbeanServerConn, name, StorageServiceMBean.class);
         }
         catch (MalformedObjectNameException e)
         {
@@ -159,20 +164,24 @@ public class Node {
         return null;
     }
 
-    public List<String> getTables(String keyspace) {
-        List<String> result = new ArrayList<>();
+    public List<Table> getTables(String keyspace) {
+        List<Table> result = new ArrayList<>();
         try {
             ObjectName oName = new ObjectName( String.format("org.apache.cassandra.db:type=ColumnFamilies,keyspace=%s,columnfamily=*", keyspace));
+
             Set<ObjectName> names = mbeanServerConn.queryNames( oName, null);
             for (ObjectName name: names) {
-                 String sName = name.getKeyProperty("columnfamily");
-                 result.add(sName);
+                String sName = name.getKeyProperty("columnfamily");
+
+                oName = new ObjectName(String.format("org.apache.cassandra.metrics:type=ColumnFamily,keyspace=%s,scope=%s,name=%s", keyspace, sName, "TotalDiskSpaceUsed"));
+                long size = newMBeanProxy(mbeanServerConn, oName, CassandraMetricsRegistry.JmxCounterMBean.class).getCount();
+
+                result.add(new Table(sName, size));
             }
-            return result;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return result;
     }
 
     public List<String> getKeyspaces() {
