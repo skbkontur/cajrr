@@ -12,6 +12,8 @@ build:
 test: clean prepare
 	mvn test
 
+run: build
+	/usr/bin/java -jar target/cajrr-1.0-SNAPSHOT.jar server pkg/config.yml
 tar:
 	mkdir -p build/root/usr/lib/cajrr
 	mkdir -p build/root/usr/lib/systemd/system
