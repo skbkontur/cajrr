@@ -29,6 +29,8 @@ public class TableResource {
             @PathParam("keyspace") NonEmptyStringParam keyspace) {
         Cluster cluster = retrieveCluster(index);
         String ks = retrieveKeyspace(keyspace);
+
+        cluster.connect();
         return cluster.getTables(ks);
     }
 

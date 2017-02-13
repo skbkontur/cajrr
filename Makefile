@@ -12,6 +12,8 @@ build:
 test: clean prepare
 	mvn test
 
+up: clean build run
+
 run: build
 	/usr/bin/java -jar target/cajrr-1.0-SNAPSHOT.jar server pkg/config.yml
 tar:
