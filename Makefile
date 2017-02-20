@@ -1,10 +1,20 @@
 VERSION := $(shell git describe --always --tags --abbrev=0 | tail -c +2)
 RELEASE := $(shell git describe --always --tags | awk -F- '{ if ($$2) dot="."} END { printf "1%s%s%s%s\n",dot,$$2,dot,$$3}')
 VENDOR := "SKB Kontur"
-LICENSE := "GPLv3"
+LICENSE := "BSD"
 URL := "https://github.com/skbkontur/cajrr"
 
-default: prepare test build
+default: clean prepare test build packages
+
+prepare:
+	sudo apt-get -qq update
+	sudo apt-get install -y rpm ruby-dev gcc make
+	sudo gem install fpm
+
+clean:
+	@rm -rf build
+
+prepare: clean
 
 build:
 	mvn package
@@ -58,16 +68,5 @@ deb:
 		build/cajrr-$(VERSION)-$(RELEASE).tar.gz
 
 packages: clean build tar rpm deb
-
-clean:
-	rm -rf build
-
-
-setup: init
-	@cd pkg && ansible-playbook -i inventory provision.yml && \
-	docker-compose -p cajrr restart cassandra1 cassandra2 cassandra3
-
-init:
-	@cd pkg && docker-compose -p cajrr up -d
 
 .PHONY: test
