@@ -1,6 +1,6 @@
 callback: http://localhost:8888/status
 clusters:
-  - name: Test cluster
+  - name: DevCluster
     nodes:
       - host: 172.16.238.10
         port: 7199
