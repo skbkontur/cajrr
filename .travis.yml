@@ -2,10 +2,11 @@ language: java
 jdk:
 - oraclejdk8
 cache: false
+sudo: true
 before_install:
   - make prepare
 install:
-  - make test  
+  - make test
 script:
   - make packages
 before_deploy:

@@ -9,7 +9,7 @@ default: clean prepare test build packages
 prepare:
 	sudo apt-get -qq update
 	sudo apt-get install -y rpm ruby-dev gcc make
-	sudo gem install fpm
+	gem install fpm
 
 clean:
 	@rm -rf build
