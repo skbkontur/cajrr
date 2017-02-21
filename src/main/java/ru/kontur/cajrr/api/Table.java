@@ -3,9 +3,6 @@ package ru.kontur.cajrr.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Table implements Comparable<Table>{
-    private final int MAX_SLICES = 50;
-    private final int MIN_SLICING_SIZE = 1000000;
-
     @JsonProperty
     public String name;
 
@@ -25,11 +22,11 @@ public class Table implements Comparable<Table>{
         return weight;
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(double weight, int minSlicingSize, int maxSlices) {
 
         this.weight = weight;
-        if (this.size > MIN_SLICING_SIZE) {
-            this.slices = (int) (MAX_SLICES * weight);
+        if (this.size > minSlicingSize) {
+            this.slices = (int) (maxSlices * weight);
             if (this.slices == 0) {
                 this.slices = 1;
             }

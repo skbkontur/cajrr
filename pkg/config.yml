@@ -1,11 +1,13 @@
 callback: http://localhost:8888/status
-clusters:
-  - name: DevCluster
-    nodes:
-      - host: 172.16.238.10
-        port: 7199
-      - host: 172.16.238.11
-      - host: 172.16.238.12
+combinationThreshold: 10000
+minSlicingSize: 10000000
+maxSlices: 50
+cluster: DevCluster
+nodes:
+  - host: 172.16.238.10
+    port: 7199
+  - host: 172.16.238.11
+  - host: 172.16.238.12
 
 
 logging:

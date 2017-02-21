@@ -1,17 +1,14 @@
 package ru.kontur.cajrr.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import io.dropwizard.jersey.params.IntParam;
-import io.dropwizard.jersey.params.NonEmptyStringParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.AppConfiguration;
-import ru.kontur.cajrr.api.Cluster;
+import ru.kontur.cajrr.api.Node;
 import ru.kontur.cajrr.api.Repair;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Path("/repair")
 @Produces(MediaType.APPLICATION_JSON)
@@ -24,6 +21,8 @@ public class RepairResource {
         this.config = config;
     }
 
+    private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
@@ -31,18 +30,18 @@ public class RepairResource {
 
         repair.callback = config.callback;
 
-        Cluster cluster = retrieveCluster(repair.cluster);
-        cluster.registerRepair(repair);
+        registerRepair(repair);
 
         return repair;
     }
-    private Cluster retrieveCluster(String index) {
-        for (Cluster cluster :
-                config.clusters) {
-            if(cluster.name.equals(index)) {
-                return cluster;
-            }
+
+    private void registerRepair(Repair repair) throws Exception {
+        Node proxy = config.findNode(repair.getProxyNode());
+        try {
+            proxy.addListener(repair);
+            repair.run(proxy);
+        }   catch (Exception e) {
+            LOG.error(e.getMessage());
         }
-        throw new NotFoundException();
     }
 }

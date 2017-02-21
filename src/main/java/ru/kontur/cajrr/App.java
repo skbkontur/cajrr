@@ -6,7 +6,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.kontur.cajrr.api.Cluster;
 import ru.kontur.cajrr.health.RepairHealthCheck;
 import ru.kontur.cajrr.resources.KeyspaceResource;
 import ru.kontur.cajrr.resources.RepairResource;
@@ -45,8 +44,6 @@ public class App extends Application<AppConfiguration>
     @Override
     public void run(AppConfiguration configuration,
                     Environment environment) throws IOException {
-
-        configuration.clusters.forEach(Cluster::connect);
 
         final RingResource ringResource = new RingResource(configuration);
         final RepairResource repairResource = new RepairResource(configuration);

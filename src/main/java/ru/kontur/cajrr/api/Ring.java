@@ -1,6 +1,5 @@
 package ru.kontur.cajrr.api;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,7 @@ public class Ring {
     BigInteger RANGE_MAX;
     BigInteger RANGE_SIZE;
 
-    List<Token> getTokensFromRanges(List<String> lines) {
+    public List<Token> getTokensFromRanges(List<String> lines) {
         List<Range> ranges = new ArrayList<>();
         for(String line: lines) {
             Range range = new Range(line);
@@ -40,9 +39,8 @@ public class Ring {
 
     int slices = 1;
 
-    Ring(Cluster cluster, int slices) {
+    public Ring(String partitioner, int slices) {
         this.slices = slices;
-        String partitioner = cluster.getPartitioner();
         if(partitioner.endsWith("RandomPartitioner")) {
             RANGE_MIN = BigInteger.ZERO;
             RANGE_MAX = new BigInteger("2").pow(127).subtract(BigInteger.ONE);
@@ -53,7 +51,7 @@ public class Ring {
         RANGE_SIZE = RANGE_MAX.subtract(RANGE_MIN).add(BigInteger.ONE);
     }
 
-    List<Token> getTokensFromMap(Map<BigInteger, String> map) {
+    public List<Token> getTokensFromMap(Map<BigInteger, String> map) {
 
         counter.set(0);
         Token first = null;

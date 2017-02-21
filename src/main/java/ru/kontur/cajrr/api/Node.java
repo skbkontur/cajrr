@@ -1,7 +1,6 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javafx.scene.control.Tab;
 import org.apache.cassandra.service.StorageServiceMBean;
 
 import javax.management.*;
@@ -28,8 +27,8 @@ public class Node {
 
     @JsonProperty
     public String getHost() {
-        InetAddress address = null;
-        String result = "";
+        InetAddress address;
+        String result;
         try {
             address = InetAddress.getByName(host);
             result = address.getHostAddress();
@@ -140,7 +139,7 @@ public class Node {
         return ssProxy.repairAsync(keyspace, options);
     }
 
-    void addListener(NotificationListener observer) {
+    public void addListener(NotificationListener observer) {
         jmxc.addConnectionNotificationListener(observer, null, null);
         ssProxy.addNotificationListener(observer, null, null);
     }

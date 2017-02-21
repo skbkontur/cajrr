@@ -7,19 +7,9 @@ import org.apache.cassandra.utils.concurrent.SimpleCondition;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.apache.cassandra.utils.progress.jmx.JMXNotificationProgressListener;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.Notification;
-import javax.management.remote.JMXConnectionNotification;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
@@ -68,7 +58,7 @@ public class Repair extends JMXNotificationProgressListener {
         return tag.equals("repair:" + cmd);
     }
 
-    void run(Node proxy) throws Exception
+    public void run(Node proxy) throws Exception
     {
         cmd = proxy.repairAsync(keyspace, getOptions());
         if (cmd <= 0)
@@ -100,7 +90,7 @@ public class Repair extends JMXNotificationProgressListener {
         return result;
     }
 
-    String getProxyNode() {
+    public String getProxyNode() {
         String[] parts = endpoint.split(",");
         return parts[0].trim();
     }
