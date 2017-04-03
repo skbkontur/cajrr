@@ -2,7 +2,10 @@ consulHost: localhost:8500
 combinationThreshold: 10000
 minSlicingSize: 10000000
 maxSlices: 10
+<<<<<<< HEAD:etc/config.yml
 interval: 5000 # in milliseconds
+=======
+>>>>>>> a59233a9140aa990fc0d6fa823a3d5bddc725d88:etc/config.yml
 cluster: DevCluster
 nodes:
   - host: 172.16.238.10

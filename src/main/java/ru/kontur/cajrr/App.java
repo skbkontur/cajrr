@@ -48,11 +48,16 @@ public class App extends Application<AppConfiguration>
         environment.jersey().register(repairResource);
         environment.jersey().register(tableResource);
         environment.jersey().register(ringResource);
+<<<<<<< HEAD
 
         final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration);
         environment.healthChecks().register("repair", healthCheck);
 
         Cluster cluster = new Cluster(configuration, repairResource, ringResource, tableResource);
         environment.lifecycle().manage(cluster);
+=======
+        environment.jersey().register(keyspaceResource);
+
+>>>>>>> a59233a9140aa990fc0d6fa823a3d5bddc725d88
     }
 }

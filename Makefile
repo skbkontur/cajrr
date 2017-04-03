@@ -10,8 +10,11 @@ prepare:
 	sudo apt-get -qq update
 	sudo apt-get install -y rpm ruby-dev gcc make
 	sudo gem install fpm
+<<<<<<< HEAD
 	go get -u github.com/docker/docker/api
 	go get -u github.com/gocql/gocql
+=======
+>>>>>>> a59233a9140aa990fc0d6fa823a3d5bddc725d88
 
 clean:
 	@rm -rf build
@@ -20,6 +23,7 @@ clean:
 prepare: clean
 
 infra:
+<<<<<<< HEAD
 	docker-compose -p repair up -d
 	ansible-playbook -i develop provision.yml
 
@@ -28,6 +32,9 @@ integration_test: infra
 
 integration_check:
 	go test -v integration_test.go -- check
+=======
+	docker-compose up -d
+>>>>>>> a59233a9140aa990fc0d6fa823a3d5bddc725d88
 
 build:
 	mvn package
@@ -41,8 +48,12 @@ test: clean prepare
 up: prepare integration_test run
 
 run: build
+<<<<<<< HEAD
 	/usr/bin/java -jar target/cajrr-$(VERSION)-SNAPSHOT.jar server etc/config.yml
 
+=======
+	/usr/bin/java -jar target/cajrr-$(VERSION)-SNAPSHOT.jar server pkg/config.yml
+>>>>>>> a59233a9140aa990fc0d6fa823a3d5bddc725d88
 tar:
 	mkdir -p build/root/usr/lib/cajrr
 	mkdir -p build/root/usr/lib/systemd/system
