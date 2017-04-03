@@ -3,6 +3,10 @@ jdk:
 - oraclejdk8
 cache: false
 sudo: true
+
+services:
+  - docker
+
 before_install:
   - make prepare
 install:
