@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigInteger;
 
-class Fragment {
+public class Fragment {
 
     @JsonProperty
     public long id;
@@ -14,11 +14,6 @@ class Fragment {
 
     private BigInteger start;
     private BigInteger end;
-
-
-    public Fragment() {
-        // JSON
-    }
 
     Fragment(long id, BigInteger start, BigInteger end) {
         this.id = id;
@@ -41,13 +36,4 @@ class Fragment {
         return end.toString();
     }
 
-    @JsonProperty
-    public void setStart(String start) {
-        this.start = new BigInteger(start);
-    }
-
-    @JsonProperty
-    public void setEnd(String end) {
-        this.end = new BigInteger(end);
-    }
 }

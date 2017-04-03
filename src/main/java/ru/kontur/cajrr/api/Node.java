@@ -1,6 +1,7 @@
 package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.lifecycle.Managed;
 import org.apache.cassandra.service.StorageServiceMBean;
 
 import javax.management.*;
@@ -18,7 +19,7 @@ import java.util.*;
 import static javax.management.JMX.newMBeanProxy;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 
-public class Node {
+public class Node implements Managed {
 
     private String host = "localhost";
     private Integer port = 7199;
@@ -74,12 +75,8 @@ public class Node {
     private StorageServiceMBean ssProxy;
     private MBeanServerConnection mbeanServerConn;
 
-    /**
-     * Create a connection to the JMX agent and setup the M[X]Bean proxies.
-     *
-     * @throws IOException on connection failures
-     */
-    public void connect() throws IOException
+    @Override
+    public void start() throws IOException
     {
         JMXServiceURL jmxUrl = new JMXServiceURL(String.format(fmtUrl, host, port));
         Map<String,Object> env = new HashMap<>();
@@ -107,6 +104,12 @@ public class Node {
         }
     }
 
+    @Override
+    public void stop() throws IOException
+    {
+        jmxc.close();
+    }
+
     private RMIClientSocketFactory getRMIClientSocketFactory() throws IOException
     {
         if (Boolean.parseBoolean(System.getProperty("ssl.enable")))
@@ -130,10 +133,6 @@ public class Node {
         return partitioner;
     }
 
-    public void close() throws IOException
-    {
-        jmxc.close();
-    }
 
     public int repairAsync(String keyspace, Map<String, String> options) {
         return ssProxy.repairAsync(keyspace, options);
@@ -144,7 +143,7 @@ public class Node {
         ssProxy.addNotificationListener(observer, null, null);
     }
 
-     void removeListener(NotificationListener observer) {
+    public void removeListener(NotificationListener observer) {
         try {
             jmxc.removeConnectionNotificationListener(observer, null, null);
             ssProxy.removeNotificationListener(observer);
@@ -166,6 +165,7 @@ public class Node {
     public List<Table> getTables(String keyspace) {
         List<Table> result = new ArrayList<>();
         try {
+            start();
             ObjectName oName = new ObjectName( String.format("org.apache.cassandra.db:type=ColumnFamilies,keyspace=%s,columnfamily=*", keyspace));
 
             Set<ObjectName> names = mbeanServerConn.queryNames( oName, null);
@@ -183,10 +183,4 @@ public class Node {
         return result;
     }
 
-    public List<String> getKeyspaces() {
-        return ssProxy.getNonSystemKeyspaces();
-    }
-
-    public void removeListener(Repair repair) {
-    }
 }

@@ -26,7 +26,6 @@ public class TableResource {
     public List<Table> tables(
             @PathParam("keyspace") NonEmptyStringParam keyspace) {
         String ks = retrieveKeyspace(keyspace);
-        config.connect();
         return getTables(ks);
     }
 

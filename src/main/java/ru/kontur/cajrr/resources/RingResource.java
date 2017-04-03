@@ -50,23 +50,15 @@ public class RingResource {
     @GET
     @Path("/{keyspace}/{slices}")
     public List<Token> describe(
-            @PathParam("keyspace") NonEmptyStringParam keyspace,
-            @PathParam("slices") IntParam slices
+            @PathParam("keyspace") String keyspace,
+            @PathParam("slices") int slices
     ) throws Exception {
-        String ks = retrieveKeyspace(keyspace);
         String partitioner = config.defaultNode().getPartitioner();
-        Ring ring = new Ring(partitioner, slices.get());
-        List<String> ranges = config.defaultNode().describeRing(ks);
+        Ring ring = new Ring(partitioner, slices);
+        List<String> ranges = config.defaultNode().describeRing(keyspace);
 
         return ring.getTokensFromRanges(ranges);
     }
 
-    private String retrieveKeyspace(NonEmptyStringParam keyspace) {
-        Optional<String> ks = keyspace.get();
-        if(!ks.isPresent()) {
-            throw new NotFoundException();
-        }
-        return ks.get();
-    }
 
 }

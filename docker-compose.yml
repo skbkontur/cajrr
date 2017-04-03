@@ -1,0 +1,60 @@
+version: '2'
+services:
+  consul:
+    image: consul:latest
+    network_mode: "host"
+    ports:
+      - 8500:8500
+
+  #----------------------------------- Cassanra cluster example
+  cassandra1:
+    build: ./docker/cassandra
+    image: cassandra:dev
+    restart: "on-failure:100"
+    ports:
+        - 7199:7199
+    networks:
+      app:
+        ipv4_address: 172.16.238.10
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: 172.16.238.10
+      JVM_OPTS: "-Djava.rmi.server.hostname=172.16.238.10"
+      LOCAL_JMX: "no"
+
+  cassandra2:
+    build: ./docker/cassandra
+    image: cassandra:dev
+    restart: "on-failure:100"
+    networks:
+      app:
+        ipv4_address: 172.16.238.11
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: 172.16.238.11
+      CASSANDRA_SEEDS: "172.16.238.10"
+      JVM_OPTS: "-Djava.rmi.server.hostname=172.16.238.11"
+      LOCAL_JMX: "no"
+
+  cassandra3:
+    build: ./docker/cassandra
+    image: cassandra:dev
+    restart: "on-failure:100"
+    networks:
+      app:
+        ipv4_address: 172.16.238.12
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: 172.16.238.12
+      CASSANDRA_SEEDS: 172.16.238.10
+      JVM_OPTS: "-Djava.rmi.server.hostname=172.16.238.12"
+      LOCAL_JMX: "no"
+
+#---------------------------------------------- Networking
+networks:
+  app:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.16.238.0/24
+        gateway: 172.16.238.1

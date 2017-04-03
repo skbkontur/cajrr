@@ -1,0 +1,7 @@
+[cassandra]
+repair_cassandra1_1 container_address=172.16.238.10
+repair_cassandra2_1 container_address=172.16.238.11
+repair_cassandra3_1 container_address=172.16.238.12
+
+[consul]
+repair_consul_1 container_address=localhost

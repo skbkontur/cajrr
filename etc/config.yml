@@ -1,14 +1,19 @@
-callback: http://localhost:8888/status
+consulHost: localhost:8500
 combinationThreshold: 10000
 minSlicingSize: 10000000
-maxSlices: 50
+maxSlices: 10
+interval: 5000 # in milliseconds
 cluster: DevCluster
 nodes:
   - host: 172.16.238.10
     port: 7199
   - host: 172.16.238.11
+    port: 7199
   - host: 172.16.238.12
+    port: 7199
 
+keyspaces:
+  - testspace
 
 logging:
   level: DEBUG

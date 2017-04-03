@@ -7,16 +7,18 @@ import org.apache.cassandra.utils.concurrent.SimpleCondition;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.apache.cassandra.utils.progress.jmx.JMXNotificationProgressListener;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Repair extends JMXNotificationProgressListener {
-
-    private int cmd;
 
 
     @JsonProperty
@@ -40,14 +42,26 @@ public class Repair extends JMXNotificationProgressListener {
     @JsonProperty
     public String table;
 
-    public String callback;
-
-    private RepairStatus status;
-
-    private final Condition condition = new SimpleCondition();
+    private Condition condition;
 
 
     private static final Logger LOG = LoggerFactory.getLogger(Repair.class);
+
+    @JsonProperty
+    public int command;
+
+    @JsonProperty
+    public String message;
+
+    @JsonProperty
+    public String options;
+
+    @JsonProperty
+    public String session;
+
+    @JsonProperty
+    public String type;
+
 
     public Repair() {
         // JSON deserializer
@@ -55,31 +69,55 @@ public class Repair extends JMXNotificationProgressListener {
 
     @Override
     public boolean isInterestedIn(String tag) {
-        return tag.equals("repair:" + cmd);
+        return tag.equals("repair:" + command);
     }
 
-    public void run(Node proxy) throws Exception
-    {
-        cmd = proxy.repairAsync(keyspace, getOptions());
-        if (cmd <= 0)
-        {
-            LOG.error(String.format("There is nothing to repair in keyspace %s", keyspace));
+    private void processComplete(String input) {
+        this.message = input;
+
+        Pattern p = Pattern.compile("Repair command #([0-9]+) finished");
+        Matcher m = p.matcher(input);
+
+        if (m.find()) {
+            this.command =  Integer.parseInt(m.group(1));
+            this.message = "Repair command finished";
+            LOG.info(this.message);
         }
-        else
-        {
-            condition.await();
+        condition.signalAll();
+    }
+
+    private void processStart(String input) {
+        this.message = input;
+
+        Pattern p = Pattern.compile("Starting repair command #([0-9]+), repairing keyspace ([A-Za-z0-9]+) with repair options \\((.+)\\)");
+        Matcher m = p.matcher(input);
+
+        if (m.find()) {
+            this.command =  Integer.parseInt(m.group(1));
+            this.options = m.group(3);
+            this.message = "Starting repair command";
         }
 
-        proxy.removeListener(this);
     }
 
-    private void reportStatus(ProgressEvent event)  throws Exception {
-        RepairStatus status = new RepairStatus(this);
-        status.report(event, callback);
+    private void processSuccess(String input) {
+        this.message = input;
     }
 
 
-    Map<String,String> getOptions() {
+    private void processProgress(String input) {
+        this.message = input;
+
+        Pattern p = Pattern.compile("Repair session ([a-f0-9-]+) for range \\(([-0-9]+),([-0-9]+)\\] ([a-z]+)");
+        Matcher m = p.matcher(input);
+
+        if (m.find()) {
+            this.session = m.group(1);
+            this.message = "Repair session " + m.group(4);
+        }
+    }
+
+    public Map<String,String> getOptions() {
         Map<String, String> result = new HashMap<>();
         result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.SEQUENTIAL));
         result.put(RepairOption.HOSTS_KEY, endpoint);
@@ -98,20 +136,26 @@ public class Repair extends JMXNotificationProgressListener {
     @Override
     public void progress(String tag, ProgressEvent event)
     {
-        new Thread(tag) {
-            public void run() {
-                try {
-                    reportStatus(event);
-
-                    ProgressEventType type = event.getType();
-                    if (type.equals(ProgressEventType.COMPLETE)) {
-                        condition.signalAll();
-                    }
-                } catch (Exception e) {
-                    condition.signalAll();
-                }
+            ProgressEventType type = event.getType();
+            switch (type) {
+                case COMPLETE:
+                    processComplete(event.getMessage());
+                    break;
+                case START:
+                    processStart(event.getMessage());
+                    break;
+                case SUCCESS:
+                    processSuccess(event.getMessage());
+                    break;
+                case PROGRESS:
+                    processProgress(event.getMessage());
+                    break;
             }
-        }.start();
+
+    }
+
+    public void setCondition(Condition condition) {
+        this.condition = condition;
     }
 }
 

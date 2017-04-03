@@ -39,7 +39,7 @@ public class Table implements Comparable<Table>{
     }
 
     @JsonProperty
-    public long getSlices() {
+    public int getSlices() {
         return this.slices;
     }
 

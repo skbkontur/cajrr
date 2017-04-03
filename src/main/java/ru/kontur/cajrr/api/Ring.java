@@ -73,7 +73,7 @@ public class Ring {
                 result.add(prev);
                 prev = token;
             } catch (Exception e) {
-                LOG.error(e.toString());
+                e.printStackTrace();
             }
         }
         assert prev != null;

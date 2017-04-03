@@ -1,0 +1,56 @@
+---
+- hosts: consul
+  connection: local
+  tasks:
+    - wait_for: host={{ container_address }} port=8500
+      delegate_to: localhost
+
+- hosts: cassandra
+  connection: docker
+  handlers:
+    - name: restart cassandra containers
+      connection: local
+      command: docker restart {{ inventory_hostname }}
+
+  tasks:
+    - name: Disable HintedHandoff
+      lineinfile:
+        dest: /etc/cassandra/cassandra.yaml
+        regexp: '^hinted_handoff_enabled'
+        line: 'hinted_handoff_enabled: false'
+      notify:
+        - restart cassandra containers
+    - name: Disable Hint window
+      lineinfile:
+        dest: /etc/cassandra/cassandra.yaml
+        regexp: '^max_hint_window_in_ms'
+        line: 'max_hint_window_in_ms: 1'
+      notify:
+        - restart cassandra containers
+    - name: Disable HintedHandoff throttle
+      lineinfile:
+        dest: /etc/cassandra/cassandra.yaml
+        regexp: '^hinted_handoff_throttle_in_kb'
+        line: 'hinted_handoff_throttle_in_kb: 1'
+      notify:
+        - restart cassandra containers
+    - name: Cut Hints delivery threads
+      lineinfile:
+        dest: /etc/cassandra/cassandra.yaml
+        regexp: '^max_hints_delivery_threads'
+        line: 'max_hints_delivery_threads: 1'
+      notify:
+        - restart cassandra containers
+    - name: Disable JMX authentication in Cassandra
+      lineinfile:
+        dest: /etc/cassandra/cassandra-env.sh
+        regexp: 'jmxremote.authenticate='
+        line: '  JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"'
+      notify:
+        - restart cassandra containers
+
+- hosts: cassandra
+  connection: docker
+  tasks:
+    - wait_for: host={{ container_address }} port=9042
+      delegate_to: localhost
