@@ -35,7 +35,7 @@ build:
 logs:
 	docker-compose -p repair logs -f
 
-test: clean prepare
+test:
 	mvn test
 
 up: prepare integration_test run
