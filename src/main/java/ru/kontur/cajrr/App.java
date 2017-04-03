@@ -56,5 +56,6 @@ public class App extends Application<AppConfiguration>
         environment.jersey().register(tableResource);
         environment.jersey().register(ringResource);
         environment.jersey().register(keyspaceResource);
+
     }
 }

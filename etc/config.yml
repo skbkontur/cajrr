@@ -1,7 +1,7 @@
 callback: http://localhost:8888/status
 combinationThreshold: 10000
 minSlicingSize: 10000000
-maxSlices: 50
+maxSlices: 10
 cluster: DevCluster
 nodes:
   - host: 172.16.238.10
