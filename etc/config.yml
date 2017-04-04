@@ -2,7 +2,7 @@ consulHost: localhost:8500
 combinationThreshold: 10000
 minSlicingSize: 10000000
 maxSlices: 10
-interval: 5000 # in milliseconds
+interval: 50000 # in milliseconds
 cluster: DevCluster
 nodes:
   - host: 172.16.238.10
@@ -31,10 +31,10 @@ logging:
 #      timeZone: Asia/Yekaterinburg
       logFormat: "%-6level [%d] [%t] %logger{5} - %msg %n"
 
-#metrics:
-#  frequency: 1 minute
-#  reporters:
-#    - type: graphite
-#      host: graphite.example.com
-#      port: 2003
-#      prefix: DevOps.cajrr.localhost
+metrics:
+  frequency: 1 minute
+  reporters:
+    - type: graphite
+      host: 172.16.238.4
+      port: 2003
+      prefix: DevOps.cajrr.localhost

@@ -8,7 +8,7 @@ services:
   - docker
 
 before_install:
-  - make prepare
+  - make prepare_for_travis
 install:
   - make test
 script:
