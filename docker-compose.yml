@@ -64,7 +64,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_METRICS_GRAPHITE_ADDRESS: "graphite"
     networks:
-      metrics:
+      app:
         ipv4_address: 172.16.238.30
 
 networks:
