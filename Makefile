@@ -14,8 +14,8 @@ prepare:
 	go get -u github.com/gocql/gocql
 
 prepare_for_travis:
-	apt-get -qq update
-	apt-get install -y rpm ruby-dev gcc make
+	sudo apt-get -qq update
+	sudo apt-get install -y rpm ruby-dev gcc make
 	gem install fpm
 	go get -u github.com/docker/docker/api
 	go get -u github.com/gocql/gocql
