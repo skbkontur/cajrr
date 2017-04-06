@@ -32,11 +32,24 @@ public class Cluster implements Managed {
             node.start();
         }
 
-        repairResource.run(tableResource, ringResource);
+        Runnable task = () -> {
+            repairResource.tableResource = tableResource;
+            repairResource.ringResource = ringResource;
+            String threadName = Thread.currentThread().getName();
+            System.out.println("Repair " + threadName);
+            try {
+                repairResource.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        };
+        new Thread(task).start();
     }
 
     @Override
     public void stop() throws Exception {
+        repairResource.stop();
+
         for (Node node: nodes) {
             node.stop();
         }

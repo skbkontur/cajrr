@@ -12,6 +12,7 @@ import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
@@ -62,6 +63,8 @@ public class Repair extends JMXNotificationProgressListener {
     @JsonProperty
     public String type;
 
+    public Instant started;
+
 
     public Repair() {
         // JSON deserializer
@@ -81,7 +84,6 @@ public class Repair extends JMXNotificationProgressListener {
         if (m.find()) {
             this.command =  Integer.parseInt(m.group(1));
             this.message = "Repair command finished";
-            LOG.info(this.message);
         }
         condition.signalAll();
     }

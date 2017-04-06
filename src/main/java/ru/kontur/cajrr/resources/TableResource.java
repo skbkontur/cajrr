@@ -1,6 +1,7 @@
 package ru.kontur.cajrr.resources;
 
 
+import com.orbitz.consul.Consul;
 import io.dropwizard.jersey.params.NonEmptyStringParam;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Table;
@@ -17,8 +18,10 @@ import java.util.Optional;
 public class TableResource {
 
     private final AppConfiguration config;
+    private final Consul consul;
 
-    public TableResource(AppConfiguration config) {
+    public TableResource(Consul consul, AppConfiguration config) {
+        this.consul = consul;
         this.config = config;
     }
 

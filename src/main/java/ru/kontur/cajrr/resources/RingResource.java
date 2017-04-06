@@ -1,8 +1,7 @@
 package ru.kontur.cajrr.resources;
 
 
-import io.dropwizard.jersey.params.IntParam;
-import io.dropwizard.jersey.params.NonEmptyStringParam;
+import com.orbitz.consul.Consul;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Ring;
 import ru.kontur.cajrr.api.Token;
@@ -12,7 +11,6 @@ import javax.ws.rs.core.MediaType;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 
 @Path("/ring")
@@ -20,8 +18,10 @@ import java.util.TreeMap;
 public class RingResource {
 
     private final AppConfiguration config;
+    private final Consul consul;
 
-    public RingResource(AppConfiguration config) {
+    public RingResource(Consul consul, AppConfiguration config) {
+        this.consul = consul;
         this.config = config;
     }
 
@@ -52,7 +52,7 @@ public class RingResource {
     public List<Token> describe(
             @PathParam("keyspace") String keyspace,
             @PathParam("slices") int slices
-    ) throws Exception {
+    ) {
         String partitioner = config.defaultNode().getPartitioner();
         Ring ring = new Ring(partitioner, slices);
         List<String> ranges = config.defaultNode().describeRing(keyspace);

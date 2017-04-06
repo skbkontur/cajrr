@@ -1,8 +1,15 @@
-consulHost: localhost:8500
 combinationThreshold: 10000
 minSlicingSize: 10000000
 maxSlices: 10
 interval: 50000 # in milliseconds
+consul:
+  endpoint: localhost:8500
+  # service port
+  servicePort: 8080
+  # check interval frequency
+  checkInterval: 1 minute
+
+
 cluster: DevCluster
 nodes:
   - host: 172.16.238.10
@@ -37,4 +44,4 @@ metrics:
     - type: graphite
       host: 172.16.238.4
       port: 2003
-      prefix: DevOps.cajrr.localhost
+      prefix: Cassandra.Repair.localhost

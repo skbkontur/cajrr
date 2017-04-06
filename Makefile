@@ -93,4 +93,3 @@ deb:
 
 packages: clean build tar rpm deb
 
-.PHONY: test
