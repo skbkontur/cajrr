@@ -9,7 +9,6 @@ import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.api.Cluster;
-import ru.kontur.cajrr.api.Node;
 import ru.kontur.cajrr.health.RepairHealthCheck;
 import ru.kontur.cajrr.resources.RepairResource;
 import ru.kontur.cajrr.resources.RingResource;
@@ -50,8 +49,6 @@ public class App extends Application<AppConfiguration>
     @Override
     public void run(AppConfiguration configuration,
                     Environment environment) throws Exception {
-
-
         final Consul consul = configuration.consul.build();
 
         final RingResource ringResource = new RingResource(consul, configuration);
