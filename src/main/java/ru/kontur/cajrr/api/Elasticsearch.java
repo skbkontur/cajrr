@@ -44,8 +44,7 @@ public class Elasticsearch  implements Managed {
         Runnable task = () -> {
             while (needPost.get()) {
                 try {
-                    RepairStats stats = readStats();
-                    postStats(stats);
+                    postStats();
                     Thread.sleep(interval);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -55,19 +54,6 @@ public class Elasticsearch  implements Managed {
             System.out.println("Elastic " + threadName);
         };
         new Thread(task).start();
-    }
-
-    private RepairStats readStats() {
-        RepairStats result = null;
-        try {
-            String val = consul.keyValueClient().getValueAsString("/stats").get();
-            if(!val.isEmpty()) {
-                result = mapper.readValue(val, RepairStats.class);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result;
     }
 
     @Override
@@ -84,8 +70,8 @@ public class Elasticsearch  implements Managed {
         httppost.setHeader("Authorization", key);
     }
 
-    private void postStats(RepairStats stats) throws IOException {
-        String jsonString = mapper.writeValueAsString(stats);
+    private void postStats() throws IOException {
+        String jsonString = consul.keyValueClient().getValueAsString("/stats").get();
         StringEntity entity = new StringEntity(jsonString, "UTF8");
         httppost.setEntity(entity);
         httpClient.execute(httppost);

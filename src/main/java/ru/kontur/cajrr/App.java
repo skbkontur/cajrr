@@ -38,17 +38,22 @@ public class App extends Application<AppConfiguration>
 
     @Override
     public void initialize(Bootstrap<AppConfiguration> bootstrap) {
-        bootstrap.addBundle(new ConsulBundle<AppConfiguration>(getName()) {
-            @Override
-            public ConsulFactory getConsulFactory(AppConfiguration configuration) {
-                return configuration.consul;
-            }
-        });
+        bootstrap.addBundle(
+                new ConsulBundle<AppConfiguration>(getName()) {
+                    @Override
+                    public ConsulFactory getConsulFactory(AppConfiguration configuration) {
+
+                        return configuration.consul;
+                    }
+
+
+                });
     }
 
     @Override
     public void run(AppConfiguration configuration,
                     Environment environment) throws Exception {
+
         final Consul consul = configuration.consul.build();
 
         final RingResource ringResource = new RingResource(consul, configuration);

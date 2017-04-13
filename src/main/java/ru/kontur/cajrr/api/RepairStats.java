@@ -118,10 +118,7 @@ public class RepairStats {
         return LocalDateTime.now().toString();
     }
 
-    @JsonSetter(value = "timestamp")
-    public void setTimestamp(String ts) {}
-
-    @JsonGetter
+    @JsonProperty
     public String getDuration() {
         return formatDuration(this.Duration);
     }
