@@ -41,22 +41,23 @@ public class RepairResource {
 
         while (needToRepair.get()) {
             RepairStats stats = readStats();
-            int completed = stats.clearIfCompleted();
-            int count = 0;
+
 
             stats.Cluster = config.cluster;
             stats.ClusterTotal = totalCluster(config.keyspaces);
+            int completed = stats.clearIfCompleted();
+            int count = 0;
 
             for (String keyspace : config.keyspaces) {
                 stats.Keyspace = keyspace;
                 stats.KeyspaceTotal = totalKeyspace(keyspace);
-                stats.KeyspaceCompleted = 0;
+                stats.clearIfCompleted();
 
                 List<Table> tables = tableResource.getTables(keyspace);
                 for (Table table : tables) {
                     stats.Table = table.name;
                     stats.TableTotal = totalTable(keyspace, table);
-                    stats.TableCompleted = 0;
+                    stats.clearIfCompleted();
 
 
                     List<Token> tokens = ringResource.describe(keyspace, table.getSlices());

@@ -186,8 +186,15 @@ public class RepairStats {
     public int clearIfCompleted() {
         if (ClusterTotal == ClusterCompleted) {
             ClusterCompleted = 0;
+            ClusterDuration = java.time.Duration.ZERO;
+        }
+        if (KeyspaceTotal == KeyspaceCompleted) {
             KeyspaceCompleted = 0;
+            KeyspaceDuration = java.time.Duration.ZERO;
+        }
+        if (TableTotal == TableCompleted) {
             TableCompleted = 0;
+            TableDuration = java.time.Duration.ZERO;
         }
         return ClusterCompleted;
     }
