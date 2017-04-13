@@ -70,12 +70,6 @@ public class Elasticsearch  implements Managed {
             Optional<String> stats = consul.keyValueClient().getValueAsString("/stats");
             if (stats.isPresent()) {
                 String jsonString = stats.get();
-                jsonString = jsonString.replace("cluster", "Cluster");
-                jsonString = jsonString.replace("keyspace", "Keyspace");
-                jsonString = jsonString.replace("table", "Table");
-                jsonString = jsonString.replace("duration", "Duration");
-                jsonString = jsonString.replace("timestamp", "@timestamp");
-
                 StringEntity entity = new StringEntity(jsonString, "UTF8");
                 httppost.setEntity(entity);
                 HttpResponse response = httpClient.execute(httppost);

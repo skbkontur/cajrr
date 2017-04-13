@@ -14,35 +14,35 @@ import java.util.HashMap;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RepairStats {
 
-    public String Cluster;
-    public String Keyspace;
-    public String Table;
+    public String cluster;
+    public String keyspace;
+    public String table;
 
     public long ID;
-    public int TableTotal;
-    public int TableCompleted;
-    public int TableErrors;
-    public float TablePercent;
-    public int KeyspaceTotal;
-    public int KeyspaceCompleted;
-    public int KeyspaceErrors;
-    public float KeyspacePercent;
-    public int ClusterTotal;
-    public int ClusterCompleted;
-    public int ClusterErrors;
-    public float ClusterPercent;
-    Duration Duration = java.time.Duration.ZERO;
-    Duration TableDuration = java.time.Duration.ZERO;
-    Duration TableAverage = java.time.Duration.ZERO;
-    Duration TableEstimate = java.time.Duration.ZERO;
-    Duration KeyspaceDuration = java.time.Duration.ZERO;
-    Duration KeyspaceAverage = java.time.Duration.ZERO;
-    Duration KeyspaceEstimate = java.time.Duration.ZERO;
-    Duration ClusterDuration  = java.time.Duration.ZERO;
-    Duration ClusterAverage  = java.time.Duration.ZERO;
-    Duration ClusterEstimate  = java.time.Duration.ZERO;
+    public int tableTotal;
+    public int tableCompleted;
+    public int tableErrors;
+    public float tablePercent;
+    public int keyspaceTotal;
+    public int keyspaceCompleted;
+    public int keyspaceErrors;
+    public float keyspacePercent;
+    public int clusterTotal;
+    public int clusterCompleted;
+    public int clusterErrors;
+    public float clusterPercent;
+    Duration duration = java.time.Duration.ZERO;
+    Duration tableDuration = java.time.Duration.ZERO;
+    Duration tableAverage = java.time.Duration.ZERO;
+    Duration tableEstimate = java.time.Duration.ZERO;
+    Duration keyspaceDuration = java.time.Duration.ZERO;
+    Duration keyspaceAverage = java.time.Duration.ZERO;
+    Duration keyspaceEstimate = java.time.Duration.ZERO;
+    Duration clusterDuration = java.time.Duration.ZERO;
+    Duration clusterAverage = java.time.Duration.ZERO;
+    Duration clusterEstimate = java.time.Duration.ZERO;
 
-    LocalDateTime LastClusterSuccess;
+    LocalDateTime LastclusterSuccess;
 
     private static String formatDuration(Duration duration) {
         return DurationFormatUtils.formatDurationHMS(duration.toMillis());
@@ -50,19 +50,19 @@ public class RepairStats {
 
     public RepairStats errorRepair(Repair repair, Duration elapsed) {
         this.ID = repair.id;
-        this.Duration = elapsed;
+        this.duration = elapsed;
         incrementErrors();
         return this;
     }
 
     public RepairStats completeRepair(Repair repair, Duration elapsed)  {
         this.ID = repair.id;
-        if (this.ClusterDuration.isZero() && this.ClusterCompleted > 0) {
-            this.ClusterDuration = elapsed.multipliedBy(ClusterCompleted);
-            this.KeyspaceDuration = elapsed.multipliedBy(KeyspaceCompleted);
-            this.TableDuration = elapsed.multipliedBy(TableCompleted);
+        if (this.clusterDuration.isZero() && this.clusterCompleted > 0) {
+            this.clusterDuration = elapsed.multipliedBy(clusterCompleted);
+            this.keyspaceDuration = elapsed.multipliedBy(keyspaceCompleted);
+            this.tableDuration = elapsed.multipliedBy(tableCompleted);
         }
-        this.Duration = elapsed;
+        this.duration = elapsed;
         incrementCompleted();
         increaseDurations(elapsed);
         calculateAverage();
@@ -72,48 +72,48 @@ public class RepairStats {
     }
 
     private void calculatePercent() {
-        ClusterPercent = ClusterCompleted * 100 / ClusterTotal;
-        KeyspacePercent = KeyspaceCompleted * 100 / KeyspaceTotal;
-        TablePercent = TableCompleted * 100 / TableTotal;
+        clusterPercent = clusterCompleted * 100 / clusterTotal;
+        keyspacePercent = keyspaceCompleted * 100 / keyspaceTotal;
+        tablePercent = tableCompleted * 100 / tableTotal;
 
-        if (ClusterPercent == 100) {
-            LastClusterSuccess = LocalDateTime.now();
+        if (clusterPercent == 100) {
+            LastclusterSuccess = LocalDateTime.now();
         }
     }
 
     private void calculateEstimate() {
-        int clusterLeft = ClusterTotal - ClusterCompleted;
-        int keyspaceLeft = KeyspaceTotal - KeyspaceCompleted;
-        int tableLeft = TableTotal - TableCompleted;
+        int clusterLeft = clusterTotal - clusterCompleted;
+        int keyspaceLeft = keyspaceTotal - keyspaceCompleted;
+        int tableLeft = tableTotal - tableCompleted;
 
-        ClusterEstimate = ClusterAverage.multipliedBy(clusterLeft);
-        KeyspaceEstimate = KeyspaceAverage.multipliedBy(keyspaceLeft);
-        TableEstimate = TableAverage.multipliedBy(tableLeft);
+        clusterEstimate = clusterAverage.multipliedBy(clusterLeft);
+        keyspaceEstimate = keyspaceAverage.multipliedBy(keyspaceLeft);
+        tableEstimate = tableAverage.multipliedBy(tableLeft);
     }
 
     private void calculateAverage() {
-        ClusterAverage = ClusterDuration.dividedBy(ClusterCompleted);
-        KeyspaceAverage = KeyspaceDuration.dividedBy(KeyspaceCompleted);
-        TableAverage = TableDuration.dividedBy(TableCompleted);
+        clusterAverage = clusterDuration.dividedBy(clusterCompleted);
+        keyspaceAverage = keyspaceDuration.dividedBy(keyspaceCompleted);
+        tableAverage = tableDuration.dividedBy(tableCompleted);
 
     }
 
     private void incrementCompleted() {
-        ClusterCompleted ++;
-        KeyspaceCompleted ++;
-        TableCompleted ++;
+        clusterCompleted++;
+        keyspaceCompleted++;
+        tableCompleted++;
     }
 
     private void increaseDurations(Duration elapsed) {
-        ClusterDuration = ClusterDuration.plus(elapsed);
-        KeyspaceDuration = KeyspaceDuration.plus(elapsed);
-        TableDuration = TableDuration.plus(elapsed);
+        clusterDuration = clusterDuration.plus(elapsed);
+        keyspaceDuration = keyspaceDuration.plus(elapsed);
+        tableDuration = tableDuration.plus(elapsed);
     }
 
     private void incrementErrors() {
-        ClusterErrors ++;
-        KeyspaceErrors ++;
-        TableErrors ++;
+        clusterErrors++;
+        keyspaceErrors++;
+        tableErrors++;
 
     }
 
@@ -124,59 +124,61 @@ public class RepairStats {
 
     @JsonProperty
     public String getDuration() {
-        return formatDuration(this.Duration);
+        return formatDuration(this.duration);
     }
 
     @JsonProperty
-    public String getClusterDuration() {
-        return formatDuration(this.ClusterDuration);
+    public String getclusterDuration() {
+        return formatDuration(this.clusterDuration);
     }
 
     @JsonProperty
-    public String getClusterAverage() {
-        return formatDuration(this.ClusterAverage);
+    public String getclusterAverage() {
+        return formatDuration(this.clusterAverage);
     }
 
     @JsonProperty
-    public String getClusterEstimate() {
-        return formatDuration(this.ClusterEstimate);
+    public String getclusterEstimate() {
+        return formatDuration(this.clusterEstimate);
     }
 
     @JsonProperty
-    public String getKeyspaceDuration() { return formatDuration(this.KeyspaceDuration); }
-
-    @JsonProperty
-    public String getKeyspaceAverage() {
-        return formatDuration(this.KeyspaceAverage);
+    public String getkeyspaceDuration() {
+        return formatDuration(this.keyspaceDuration);
     }
 
     @JsonProperty
-    public String getKeyspaceEstimate() {
-        return formatDuration(this.KeyspaceEstimate);
+    public String getkeyspaceAverage() {
+        return formatDuration(this.keyspaceAverage);
     }
 
     @JsonProperty
-    public String getTableDuration() {
-        return formatDuration(this.TableDuration);
+    public String getkeyspaceEstimate() {
+        return formatDuration(this.keyspaceEstimate);
     }
 
     @JsonProperty
-    public String getTableAverage() {
-        return formatDuration(this.TableAverage);
+    public String gettableDuration() {
+        return formatDuration(this.tableDuration);
+    }
+
+    @JsonProperty
+    public String gettableAverage() {
+        return formatDuration(this.tableAverage);
     }
 
     public void loadFromJson(String s) {
         try {
             HashMap result = new ObjectMapper().readValue(s, HashMap.class);
-            this.Cluster = (String) result.get("Cluster");
-            this.ClusterTotal = (int) result.get("ClusterTotal");
-            this.ClusterCompleted = (int) result.get("ClusterCompleted");
-            this.Keyspace = (String) result.get("Keyspace");
-            this.KeyspaceTotal = (int) result.get("KeyspaceTotal");
-            this.KeyspaceCompleted = (int) result.get("KeyspaceCompleted");
-            this.Table = (String) result.get("Table");
-            this.TableTotal = (int) result.get("TableTotal");
-            this.TableCompleted = (int) result.get("TableCompleted");
+            this.cluster = (String) result.get("cluster");
+            this.clusterTotal = (int) result.get("clusterTotal");
+            this.clusterCompleted = (int) result.get("clusterCompleted");
+            this.keyspace = (String) result.get("keyspace");
+            this.keyspaceTotal = (int) result.get("keyspaceTotal");
+            this.keyspaceCompleted = (int) result.get("keyspaceCompleted");
+            this.table = (String) result.get("table");
+            this.tableTotal = (int) result.get("tableTotal");
+            this.tableCompleted = (int) result.get("tableCompleted");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -184,18 +186,18 @@ public class RepairStats {
     }
 
     public int clearIfCompleted() {
-        if (ClusterTotal == ClusterCompleted) {
-            ClusterCompleted = 0;
-            ClusterDuration = java.time.Duration.ZERO;
+        if (clusterTotal == clusterCompleted) {
+            clusterCompleted = 0;
+            clusterDuration = java.time.Duration.ZERO;
         }
-        if (KeyspaceTotal == KeyspaceCompleted) {
-            KeyspaceCompleted = 0;
-            KeyspaceDuration = java.time.Duration.ZERO;
+        if (keyspaceTotal == keyspaceCompleted) {
+            keyspaceCompleted = 0;
+            keyspaceDuration = java.time.Duration.ZERO;
         }
-        if (TableTotal == TableCompleted) {
-            TableCompleted = 0;
-            TableDuration = java.time.Duration.ZERO;
+        if (tableTotal == tableCompleted) {
+            tableCompleted = 0;
+            tableDuration = java.time.Duration.ZERO;
         }
-        return ClusterCompleted;
+        return clusterCompleted;
     }
 }

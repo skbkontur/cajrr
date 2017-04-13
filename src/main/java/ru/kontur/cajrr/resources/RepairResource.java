@@ -43,20 +43,20 @@ public class RepairResource {
             RepairStats stats = readStats();
 
 
-            stats.Cluster = config.cluster;
-            stats.ClusterTotal = totalCluster(config.keyspaces);
+            stats.cluster = config.cluster;
+            stats.clusterTotal = totalCluster(config.keyspaces);
             int completed = stats.clearIfCompleted();
             int count = 0;
 
             for (String keyspace : config.keyspaces) {
-                stats.Keyspace = keyspace;
-                stats.KeyspaceTotal = totalKeyspace(keyspace);
+                stats.keyspace = keyspace;
+                stats.keyspaceTotal = totalKeyspace(keyspace);
                 stats.clearIfCompleted();
 
                 List<Table> tables = tableResource.getTables(keyspace);
                 for (Table table : tables) {
-                    stats.Table = table.name;
-                    stats.TableTotal = totalTable(keyspace, table);
+                    stats.table = table.name;
+                    stats.tableTotal = totalTable(keyspace, table);
                     stats.clearIfCompleted();
 
 
