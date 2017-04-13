@@ -42,7 +42,7 @@ public class RepairStats {
     Duration clusterAverage = java.time.Duration.ZERO;
     Duration clusterEstimate = java.time.Duration.ZERO;
 
-    LocalDateTime LastclusterSuccess;
+    LocalDateTime lastClusterSuccess;
 
     private static String formatDuration(Duration duration) {
         return DurationFormatUtils.formatDurationHMS(duration.toMillis());
@@ -77,7 +77,7 @@ public class RepairStats {
         tablePercent = tableCompleted * 100 / tableTotal;
 
         if (clusterPercent == 100) {
-            LastclusterSuccess = LocalDateTime.now();
+            lastClusterSuccess = LocalDateTime.now();
         }
     }
 
@@ -128,45 +128,53 @@ public class RepairStats {
     }
 
     @JsonProperty
-    public String getclusterDuration() {
+    public String getClusterDuration() {
         return formatDuration(this.clusterDuration);
     }
 
     @JsonProperty
-    public String getclusterAverage() {
+    public String getClusterAverage() {
         return formatDuration(this.clusterAverage);
     }
 
     @JsonProperty
-    public String getclusterEstimate() {
+    public String getClusterEstimate() {
         return formatDuration(this.clusterEstimate);
     }
 
     @JsonProperty
-    public String getkeyspaceDuration() {
+    public String getKeyspaceDuration() {
         return formatDuration(this.keyspaceDuration);
     }
 
     @JsonProperty
-    public String getkeyspaceAverage() {
+    public String getKeyspaceAverage() {
         return formatDuration(this.keyspaceAverage);
     }
 
     @JsonProperty
-    public String getkeyspaceEstimate() {
+    public String getKeyspaceEstimate() {
         return formatDuration(this.keyspaceEstimate);
     }
 
     @JsonProperty
-    public String gettableDuration() {
+    public String getTableDuration() {
         return formatDuration(this.tableDuration);
     }
 
     @JsonProperty
-    public String gettableAverage() {
+    public String getTableAverage() {
         return formatDuration(this.tableAverage);
     }
 
+    @JsonProperty
+    public String getLastClusterSuccess() {
+        if (lastClusterSuccess != null) {
+            return lastClusterSuccess.toString();
+        } else {
+            return "";
+        }
+    }
     public void loadFromJson(String s) {
         try {
             HashMap result = new ObjectMapper().readValue(s, HashMap.class);
