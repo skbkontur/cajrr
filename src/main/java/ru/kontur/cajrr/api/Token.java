@@ -9,18 +9,16 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Token {
 
-    @JsonProperty
-    public String endpoint;
-
     private final BigInteger RANGE_MIN;
-
     private final BigInteger RANGE_MAX;
     private final BigInteger RANGE_SIZE;
+    @JsonProperty
+    public String endpoint;
     private BigInteger start;
     private BigInteger size;
     private List<Fragment> ranges;
 
-    Token(BigInteger key,  Ring ring) throws Exception {
+    Token(BigInteger key, Ring ring) {
         this.start = key;
         RANGE_MIN = ring.RANGE_MIN;
         RANGE_MAX = ring.RANGE_MAX;

@@ -2,18 +2,18 @@ package ru.kontur.cajrr.resources;
 
 import com.orbitz.consul.Consul;
 import org.apache.cassandra.utils.concurrent.SimpleCondition;
-
-import java.io.IOException;
-import java.time.Duration;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.*;
 
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,24 +22,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Produces(MediaType.APPLICATION_JSON)
 public class RepairResource {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
+    private static ObjectMapper mapper = new ObjectMapper();
     private final Consul consul;
-    private AtomicBoolean needToRepair = new AtomicBoolean(true);
-
-
     private final AppConfiguration config;
     public TableResource tableResource;
     public RingResource ringResource;
+    private AtomicBoolean needToRepair = new AtomicBoolean(true);
     private boolean error;
-    private static ObjectMapper mapper = new ObjectMapper();
 
     public RepairResource(Consul consul, AppConfiguration config) {
         this.consul = consul;
         this.config = config;
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
-
-    public void run() throws Exception {
+    public void run() {
 
         while (needToRepair.get()) {
             RepairStats stats = new RepairStats();
@@ -93,13 +90,21 @@ public class RepairResource {
                 }
                 if(!needToRepair.get()) break;
             }
-            Thread.sleep(config.interval);
+            try {
+                Thread.sleep(config.interval);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void saveStats(RepairStats stats) throws IOException {
-        String jsonString = mapper.writeValueAsString(stats);
-        consul.keyValueClient().putValue("/stats", jsonString);
+    private void saveStats(RepairStats stats) {
+        try {
+            String jsonString = mapper.writeValueAsString(stats);
+            consul.keyValueClient().putValue("/stats", jsonString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -140,8 +145,7 @@ public class RepairResource {
     }
 
 
-
-    private Duration registerRepair(Repair repair, SimpleCondition condition) throws Exception {
+    private Duration registerRepair(Repair repair, SimpleCondition condition) {
         LOG.info("Starting fragment: " + repair.toString());
         Instant start = repair.started;
         try {

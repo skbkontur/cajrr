@@ -3,39 +3,33 @@ package ru.kontur.cajrr.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.orbitz.consul.Consul;
-import com.orbitz.consul.model.kv.Value;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Elasticsearch  implements Managed {
 
-    private static HttpClient httpClient = HttpClients.createDefault();
-    HttpPost httppost;
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final Logger LOG = LoggerFactory.getLogger(Elasticsearch.class);
 
+    private static HttpClient httpClient = HttpClients.createDefault();
     @JsonProperty
     public String url;
-
-
     @JsonProperty
     public String index;
-
-
     @JsonProperty
     public String key;
-
     @JsonProperty
     public int interval = 1000*15;
-
-    AtomicBoolean needPost = new AtomicBoolean(true);
+    private HttpPost httppost;
+    private AtomicBoolean needPost = new AtomicBoolean(true);
     private Consul consul;
 
     @Override
@@ -46,12 +40,12 @@ public class Elasticsearch  implements Managed {
                 try {
                     postStats();
                     Thread.sleep(interval);
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
             String threadName = Thread.currentThread().getName();
-            System.out.println("Elastic " + threadName);
+            LOG.info("Elastic " + threadName);
         };
         new Thread(task).start();
     }
@@ -70,12 +64,22 @@ public class Elasticsearch  implements Managed {
         httppost.setHeader("Authorization", key);
     }
 
-    private void postStats() throws IOException {
-        String jsonString = consul.keyValueClient().getValueAsString("/stats").get();
-        StringEntity entity = new StringEntity(jsonString, "UTF8");
-        httppost.setEntity(entity);
-        httpClient.execute(httppost);
-        httppost.releaseConnection();
+    private void postStats() {
+        try {
+            Optional<String> stats = consul.keyValueClient().getValueAsString("/stats");
+            if (stats.isPresent()) {
+                String jsonString = stats.get();
+                StringEntity entity = new StringEntity(jsonString, "UTF8");
+                httppost.setEntity(entity);
+                httpClient.execute(httppost);
+                httppost.releaseConnection();
+                LOG.info(jsonString);
+            } else {
+                LOG.warn("Repair stats not found");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setConsul(Consul consul) {

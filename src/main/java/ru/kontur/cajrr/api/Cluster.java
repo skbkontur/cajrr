@@ -1,6 +1,8 @@
 package ru.kontur.cajrr.api;
 
 import io.dropwizard.lifecycle.Managed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.resources.RepairResource;
 import ru.kontur.cajrr.resources.RingResource;
@@ -11,6 +13,7 @@ import java.util.List;
 
 public class Cluster implements Managed {
 
+    private static final Logger LOG = LoggerFactory.getLogger(Cluster.class);
     private final List<Node> nodes;
     private final RepairResource repairResource;
     private final RingResource ringResource;
@@ -36,12 +39,8 @@ public class Cluster implements Managed {
             repairResource.tableResource = tableResource;
             repairResource.ringResource = ringResource;
             String threadName = Thread.currentThread().getName();
-            System.out.println("Repair " + threadName);
-            try {
-                repairResource.run();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            LOG.info("Repair " + threadName);
+            repairResource.run();
         };
         new Thread(task).start();
     }
