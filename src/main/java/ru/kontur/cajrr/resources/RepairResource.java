@@ -1,5 +1,6 @@
 package ru.kontur.cajrr.resources;
 
+import com.google.common.base.Optional;
 import com.orbitz.consul.Consul;
 import org.apache.cassandra.utils.concurrent.SimpleCondition;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -39,7 +40,10 @@ public class RepairResource {
     public void run() {
 
         while (needToRepair.get()) {
-            RepairStats stats = new RepairStats();
+            RepairStats stats = readStats();
+            int completed = stats.clearIfCompleted();
+            int count = 0;
+
             stats.Cluster = config.cluster;
             stats.ClusterTotal = totalCluster(config.keyspaces);
 
@@ -60,28 +64,30 @@ public class RepairResource {
                         List<Fragment> ranges = token.getRanges();
 
                         for (Fragment frag : ranges) {
-                            Repair repair = new Repair();
-                            repair.started = Instant.now();
+                            if (count >= completed) {
+                                Repair repair = new Repair();
+                                repair.started = Instant.now();
 
-                            repair.id = frag.id;
-                            repair.cluster = config.cluster;
-                            repair.keyspace = keyspace;
-                            repair.table = table.name;
-                            repair.endpoint = frag.endpoint;
-                            repair.start = frag.getStart();
-                            repair.end = frag.getEnd();
+                                repair.id = frag.id;
+                                repair.cluster = config.cluster;
+                                repair.keyspace = keyspace;
+                                repair.table = table.name;
+                                repair.endpoint = frag.endpoint;
+                                repair.start = frag.getStart();
+                                repair.end = frag.getEnd();
 
-                            SimpleCondition condition = new SimpleCondition();
-                            Duration elapsed = registerRepair(repair, condition);
-                            if (error) {
-                                stats = stats.errorRepair(repair, elapsed);
-                            } else {
-                                stats = stats.completeRepair(repair, elapsed);
+                                SimpleCondition condition = new SimpleCondition();
+                                Duration elapsed = registerRepair(repair, condition);
+                                if (error) {
+                                    stats = stats.errorRepair(repair, elapsed);
+                                } else {
+                                    stats = stats.completeRepair(repair, elapsed);
+                                }
+                                LOG.info(stats.toString());
+
+                                saveStats(stats);
                             }
-                            LOG.info(stats.toString());
-
-                            saveStats(stats);
-
+                            count++;
                             if(!needToRepair.get()) break;
                         }
                         if(!needToRepair.get()) break;
@@ -96,6 +102,16 @@ public class RepairResource {
                 e.printStackTrace();
             }
         }
+    }
+
+    private RepairStats readStats() {
+
+        RepairStats result = new RepairStats();
+        Optional<String> stats = consul.keyValueClient().getValueAsString("/stats");
+        if (stats.isPresent()) {
+            result.loadFromJson(stats.get());
+        }
+        return result;
     }
 
     private void saveStats(RepairStats stats) {

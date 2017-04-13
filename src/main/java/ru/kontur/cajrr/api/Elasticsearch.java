@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.orbitz.consul.Consul;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -57,7 +58,7 @@ public class Elasticsearch  implements Managed {
 
     private void initPost() {
         needPost.set(true);
-        String posturl = String.format("%s/%s-%s", url, index, DateTime.now().toString("YYYY.MM.DD"));
+        String posturl = String.format("%s/%s-%s", url, index, DateTime.now().toString("YYYY.MM.dd"));
         httppost = new HttpPost(posturl);
         httppost.setHeader("Connection", "close");
         httppost.setHeader("Content-type", "application/json");
@@ -71,7 +72,10 @@ public class Elasticsearch  implements Managed {
                 String jsonString = stats.get();
                 StringEntity entity = new StringEntity(jsonString, "UTF8");
                 httppost.setEntity(entity);
-                httpClient.execute(httppost);
+                HttpResponse response = httpClient.execute(httppost);
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    LOG.warn(response.getStatusLine().getReasonPhrase());
+                }
                 httppost.releaseConnection();
                 LOG.info(jsonString);
             } else {
