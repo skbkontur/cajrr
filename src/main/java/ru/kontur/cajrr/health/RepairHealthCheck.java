@@ -6,7 +6,7 @@ import com.ecwid.consul.v1.agent.model.NewService;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Node;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 public class RepairHealthCheck extends HealthCheck {
 
@@ -20,7 +20,7 @@ public class RepairHealthCheck extends HealthCheck {
         String appId = String.format("%s_%d", config.serviceName, config.servicePort);
         NewService newService = new NewService();
         newService.setId(appId);
-        newService.setTags(Collections.singletonList("Repair"));
+        newService.setTags(Arrays.asList("Cassandra", "Repair"));
         newService.setName(config.serviceName);
         newService.setPort(config.servicePort);
 
