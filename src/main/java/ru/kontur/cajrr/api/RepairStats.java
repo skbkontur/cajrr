@@ -192,19 +192,6 @@ public class RepairStats {
         }
     }
 
-    public int clearIfCompleted() {
-        if (clusterTotal == clusterCompleted) {
-            clearCluster();
-        }
-        if (keyspaceTotal == keyspaceCompleted) {
-            clearKeyspace();
-        }
-        if (tableTotal == tableCompleted) {
-            clearTable();
-        }
-        return clusterCompleted;
-    }
-
     private void clearCluster() {
         clusterCompleted = 0;
         clusterDuration = java.time.Duration.ZERO;
@@ -223,4 +210,26 @@ public class RepairStats {
     }
 
 
+    public int clearClusterIfCompleted() {
+        if (clusterTotal == clusterCompleted) {
+            clearCluster();
+        }
+        return clusterCompleted;
+    }
+
+    public int clearKeyspaceIfCompleted() {
+        if (keyspaceTotal == keyspaceCompleted) {
+            clearKeyspace();
+        }
+
+        return keyspaceCompleted;
+    }
+
+    public int clearTableIfCompleted() {
+        if (tableTotal == tableCompleted) {
+            clearTable();
+        }
+
+        return tableCompleted;
+    }
 }

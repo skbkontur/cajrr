@@ -47,19 +47,19 @@ public class RepairResource {
 
             stats.cluster = config.cluster;
             stats.clusterTotal = totalCluster(config.keyspaces);
-            int completed = stats.clearIfCompleted();
+            int completed = stats.clearClusterIfCompleted();
             int count = 0;
 
             for (String keyspace : config.keyspaces) {
                 stats.keyspace = keyspace;
                 stats.keyspaceTotal = totalKeyspace(keyspace);
-                stats.clearIfCompleted();
+                stats.clearKeyspaceIfCompleted();
 
                 List<Table> tables = tableResource.getTables(keyspace);
                 for (Table table : tables) {
                     stats.table = table.name;
                     stats.tableTotal = totalTable(keyspace, table);
-                    stats.clearIfCompleted();
+                    stats.clearTableIfCompleted();
 
 
                     List<Token> tokens = ringResource.describe(keyspace, table.getSlices());
