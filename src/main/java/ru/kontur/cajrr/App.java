@@ -43,9 +43,10 @@ public class App extends Application<AppConfiguration>
     public void run(AppConfiguration configuration,
                     Environment environment) throws Exception {
         name = configuration.serviceName;
-
+        String statKey = String.format("stats/%s", configuration.cluster);
         final RingResource ringResource = new RingResource(configuration);
         final RepairResource repairResource = new RepairResource(configuration);
+        repairResource.setStatKey(statKey);
         final TableResource tableResource = new TableResource(configuration);
         environment.jersey().register(repairResource);
         environment.jersey().register(tableResource);
@@ -59,6 +60,7 @@ public class App extends Application<AppConfiguration>
 
 
         if (null != configuration.elastic) {
+            configuration.elastic.setStatKey(statKey);
             configuration.elastic.setConsul(configuration.consul);
             environment.lifecycle().manage(configuration.elastic);
         }
