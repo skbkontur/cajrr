@@ -114,7 +114,6 @@ public class RepairStats {
         clusterErrors++;
         keyspaceErrors++;
         tableErrors++;
-
     }
 
     @JsonGetter(value = "timestamp")
@@ -195,23 +194,33 @@ public class RepairStats {
 
     public int clearIfCompleted() {
         if (clusterTotal == clusterCompleted) {
-            clusterCompleted = 0;
-            keyspaceCompleted = 0;
-            tableCompleted = 0;
-            clusterDuration = java.time.Duration.ZERO;
-            keyspaceDuration = java.time.Duration.ZERO;
-            tableDuration = java.time.Duration.ZERO;
+            clearCluster();
         }
         if (keyspaceTotal == keyspaceCompleted) {
-            keyspaceCompleted = 0;
-            tableCompleted = 0;
-            keyspaceDuration = java.time.Duration.ZERO;
-            tableDuration = java.time.Duration.ZERO;
+            clearKeyspace();
         }
         if (tableTotal == tableCompleted) {
-            tableCompleted = 0;
-            tableDuration = java.time.Duration.ZERO;
+            clearTable();
         }
         return clusterCompleted;
     }
+
+    private void clearCluster() {
+        clusterCompleted = 0;
+        clusterDuration = java.time.Duration.ZERO;
+        clearKeyspace();
+    }
+
+    private void clearKeyspace() {
+        keyspaceCompleted = 0;
+        keyspaceDuration = java.time.Duration.ZERO;
+        clearTable();
+    }
+
+    private void clearTable() {
+        tableCompleted = 0;
+        tableDuration = java.time.Duration.ZERO;
+    }
+
+
 }
