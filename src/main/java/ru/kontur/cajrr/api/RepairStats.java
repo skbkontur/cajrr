@@ -1,6 +1,5 @@
 package ru.kontur.cajrr.api;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -115,12 +114,6 @@ public class RepairStats {
         tableDuration = tableDuration.plus(elapsed);
     }
 
-
-    @JsonGetter(value = "timestamp")
-    public String getTimestamp() {
-        return LocalDateTime.now().toString();
-    }
-
     @JsonProperty
     public String getDuration() {
         return formatDuration(this.duration);
@@ -192,44 +185,29 @@ public class RepairStats {
         }
     }
 
-    private void clearCluster() {
+    public void clearCluster() {
         clusterCompleted = 0;
         clusterDuration = java.time.Duration.ZERO;
         clearKeyspace();
     }
 
-    private void clearKeyspace() {
+    public void clearKeyspace() {
         keyspaceCompleted = 0;
         keyspaceDuration = java.time.Duration.ZERO;
         clearTable();
     }
 
-    private void clearTable() {
+    public void clearTable() {
         tableCompleted = 0;
         tableDuration = java.time.Duration.ZERO;
     }
 
 
-    public int clearClusterIfCompleted() {
-        if (clusterTotal == clusterCompleted) {
+    public int clearIfCompleted() {
+        if (clusterTotal <= clusterCompleted) {
             clearCluster();
         }
         return clusterCompleted;
     }
 
-    public int clearKeyspaceIfCompleted() {
-        if (keyspaceTotal == keyspaceCompleted) {
-            clearKeyspace();
-        }
-
-        return keyspaceCompleted;
-    }
-
-    public int clearTableIfCompleted() {
-        if (tableTotal == tableCompleted) {
-            clearTable();
-        }
-
-        return tableCompleted;
-    }
 }

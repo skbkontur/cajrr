@@ -47,19 +47,17 @@ public class RepairResource {
 
             stats.cluster = config.cluster;
             stats.clusterTotal = totalCluster(config.keyspaces);
-            int completed = stats.clearClusterIfCompleted();
+            int completed = stats.clearIfCompleted();
             int count = 0;
 
             for (String keyspace : config.keyspaces) {
                 stats.keyspace = keyspace;
                 stats.keyspaceTotal = totalKeyspace(keyspace);
-                stats.clearKeyspaceIfCompleted();
 
                 List<Table> tables = tableResource.getTables(keyspace);
                 for (Table table : tables) {
                     stats.table = table.name;
                     stats.tableTotal = totalTable(keyspace, table);
-                    stats.clearTableIfCompleted();
 
 
                     List<Token> tokens = ringResource.describe(keyspace, table.getSlices());
@@ -96,11 +94,14 @@ public class RepairResource {
                         if(!needToRepair.get()) break;
                     }
                     if(!needToRepair.get()) break;
+                    stats.clearTable();
                 }
                 if(!needToRepair.get()) break;
+                stats.clearKeyspace();
             }
             try {
                 Thread.sleep(config.interval);
+                stats.clearCluster();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
