@@ -17,6 +17,7 @@ public class RepairStats {
     public String cluster;
     public String keyspace;
     public String table;
+    public String host;
 
     public long ID;
     public int tableTotal;

@@ -114,6 +114,7 @@ public class RepairResource {
             result.loadFromJson(json.getDecodedValue());
         }
 
+        result.host = config.serviceHost;
         return result;
     }
 
