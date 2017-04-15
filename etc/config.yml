@@ -1,14 +1,19 @@
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+      bindHost: "127.0.0.1"
+
 combinationThreshold: 10000
 minSlicingSize: 10000000
 maxSlices: 10
 interval: 50000 # in milliseconds
-consul:
-  endpoint: localhost:8500
-  # service port
-  servicePort: 8080
-  # check interval frequency
-  checkInterval: 1 minute
+serviceName: cajrr
+serviceHost: "127.0.0.1"
+servicePort: 8080
 
+consul: "127.0.0.1"
 
 cluster: DevCluster
 nodes:
@@ -23,10 +28,10 @@ keyspaces:
   - testspace
 
 logging:
-  level: DEBUG
+  level: INFO
   loggers:
-    io.dropwizard: DEBUG
-    org.eclipse.jetty: DEBUG
+    io.dropwizard: INFO
+    org.eclipse.jetty: INFO
   appenders:
     - type: console
 #    - type: file
