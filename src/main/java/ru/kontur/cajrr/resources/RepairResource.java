@@ -32,6 +32,7 @@ public class RepairResource {
     public RingResource ringResource;
     private AtomicBoolean needToRepair = new AtomicBoolean(true);
     private boolean error;
+    private String kvKey = "stats";
 
     public RepairResource(AppConfiguration config) {
         this.config = config;
@@ -108,7 +109,7 @@ public class RepairResource {
 
     private RepairStats readStats() {
         RepairStats result = new RepairStats();
-        Response<GetValue> keyValueResponse = consul.getKVValue("/stats");
+        Response<GetValue> keyValueResponse = consul.getKVValue(kvKey);
         GetValue json = keyValueResponse.getValue();
         if (json != null) {
             result.loadFromJson(json.getDecodedValue());
@@ -121,7 +122,7 @@ public class RepairResource {
     private void saveStats(RepairStats stats) {
         try {
             String jsonString = mapper.writeValueAsString(stats);
-            consul.setKVValue("stats", jsonString);
+            consul.setKVValue(kvKey, jsonString);
         } catch (IOException e) {
             e.printStackTrace();
         }

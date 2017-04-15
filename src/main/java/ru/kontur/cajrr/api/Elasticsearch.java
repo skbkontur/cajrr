@@ -10,11 +10,14 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Elasticsearch  implements Managed {
@@ -72,10 +75,13 @@ public class Elasticsearch  implements Managed {
     private void postStats() {
         try {
             Response<GetValue> stats = consul.getKVValue("/stats");
-            GetValue value = stats.getValue();
-            if (value != null) {
-                String jsonString = value.getDecodedValue();
-                jsonString = jsonString.replace("timestamp", "@timestamp");
+            GetValue json = stats.getValue();
+            if (json != null) {
+                ObjectMapper mapper = new ObjectMapper();
+                HashMap result = mapper.readValue(json.getDecodedValue(), HashMap.class);
+                result.put("@timestamp", LocalDateTime.now().toString());
+                result.remove("timestamp");
+                String jsonString = mapper.writeValueAsString(result);
                 StringEntity entity = new StringEntity(jsonString, "UTF8");
                 httppost.setEntity(entity);
                 HttpResponse response = httpClient.execute(httppost);
