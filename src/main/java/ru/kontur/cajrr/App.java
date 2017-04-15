@@ -1,8 +1,5 @@
 package ru.kontur.cajrr;
 
-import com.orbitz.consul.Consul;
-import com.smoketurner.dropwizard.consul.ConsulBundle;
-import com.smoketurner.dropwizard.consul.ConsulFactory;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -21,6 +18,7 @@ import ru.kontur.cajrr.resources.TableResource;
 public class App extends Application<AppConfiguration>
 {
     private static final Logger LOG = LoggerFactory.getLogger(App.class);
+    private String name = "cajrr";
 
     public App() {
         super();
@@ -33,32 +31,22 @@ public class App extends Application<AppConfiguration>
 
     @Override
     public String getName() {
-        return "cajrr";
+        return name;
     }
 
     @Override
     public void initialize(Bootstrap<AppConfiguration> bootstrap) {
-        bootstrap.addBundle(
-                new ConsulBundle<AppConfiguration>(getName()) {
-                    @Override
-                    public ConsulFactory getConsulFactory(AppConfiguration configuration) {
 
-                        return configuration.consul;
-                    }
-
-
-                });
     }
 
     @Override
     public void run(AppConfiguration configuration,
                     Environment environment) throws Exception {
+        name = configuration.serviceName;
 
-        final Consul consul = configuration.consul.build();
-
-        final RingResource ringResource = new RingResource(consul, configuration);
-        final RepairResource repairResource = new RepairResource(consul, configuration);
-        final TableResource tableResource = new TableResource(consul, configuration);
+        final RingResource ringResource = new RingResource(configuration);
+        final RepairResource repairResource = new RepairResource(configuration);
+        final TableResource tableResource = new TableResource(configuration);
         environment.jersey().register(repairResource);
         environment.jersey().register(tableResource);
         environment.jersey().register(ringResource);
@@ -71,7 +59,7 @@ public class App extends Application<AppConfiguration>
 
 
         if (null != configuration.elastic) {
-            configuration.elastic.setConsul(consul);
+            configuration.elastic.setConsul(configuration.consul);
             environment.lifecycle().manage(configuration.elastic);
         }
     }

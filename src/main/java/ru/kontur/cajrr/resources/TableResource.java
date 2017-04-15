@@ -1,7 +1,5 @@
 package ru.kontur.cajrr.resources;
 
-
-import com.orbitz.consul.Consul;
 import io.dropwizard.jersey.params.NonEmptyStringParam;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Table;
@@ -18,10 +16,8 @@ import java.util.Optional;
 public class TableResource {
 
     private final AppConfiguration config;
-    private final Consul consul;
 
-    public TableResource(Consul consul, AppConfiguration config) {
-        this.consul = consul;
+    public TableResource(AppConfiguration config) {
         this.config = config;
     }
 
@@ -32,7 +28,7 @@ public class TableResource {
         return getTables(ks);
     }
 
-    public List<Table> getTables(String keyspace) {
+    List<Table> getTables(String keyspace) {
         List<Table> tables = config.defaultNode().getTables(keyspace);
         tables = combineZerosizedTables(tables);
         tables = calculateTableWeights(tables);

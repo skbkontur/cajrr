@@ -1,12 +1,14 @@
 package ru.kontur.cajrr.resources;
 
 
-import com.orbitz.consul.Consul;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.Ring;
 import ru.kontur.cajrr.api.Token;
 
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.math.BigInteger;
 import java.util.List;
@@ -18,10 +20,8 @@ import java.util.TreeMap;
 public class RingResource {
 
     private final AppConfiguration config;
-    private final Consul consul;
 
-    public RingResource(Consul consul, AppConfiguration config) {
-        this.consul = consul;
+    public RingResource(AppConfiguration config) {
         this.config = config;
     }
 

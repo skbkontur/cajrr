@@ -1,7 +1,8 @@
 package ru.kontur.cajrr.resources;
 
-import com.google.common.base.Optional;
-import com.orbitz.consul.Consul;
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.Response;
+import com.ecwid.consul.v1.kv.model.GetValue;
 import org.apache.cassandra.utils.concurrent.SimpleCondition;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -25,16 +26,16 @@ public class RepairResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
     private static ObjectMapper mapper = new ObjectMapper();
-    private final Consul consul;
     private final AppConfiguration config;
+    private final ConsulClient consul;
     public TableResource tableResource;
     public RingResource ringResource;
     private AtomicBoolean needToRepair = new AtomicBoolean(true);
     private boolean error;
 
-    public RepairResource(Consul consul, AppConfiguration config) {
-        this.consul = consul;
+    public RepairResource(AppConfiguration config) {
         this.config = config;
+        this.consul = new ConsulClient(config.consul);
     }
 
     public void run() {
@@ -106,19 +107,20 @@ public class RepairResource {
     }
 
     private RepairStats readStats() {
-
         RepairStats result = new RepairStats();
-        Optional<String> stats = consul.keyValueClient().getValueAsString("/stats");
-        if (stats.isPresent()) {
-            result.loadFromJson(stats.get());
+        Response<GetValue> keyValueResponse = consul.getKVValue("/stats");
+        GetValue json = keyValueResponse.getValue();
+        if (json != null) {
+            result.loadFromJson(json.getDecodedValue());
         }
+
         return result;
     }
 
     private void saveStats(RepairStats stats) {
         try {
             String jsonString = mapper.writeValueAsString(stats);
-            consul.keyValueClient().putValue("/stats", jsonString);
+            consul.setKVValue("stats", jsonString);
         } catch (IOException e) {
             e.printStackTrace();
         }

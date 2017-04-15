@@ -65,13 +65,13 @@ public class RepairStats {
         this.duration = elapsed;
         incrementCompleted();
         increaseDurations(elapsed);
-        calculateAverage();
-        calculateEstimate();
-        calculatePercent();
+        calculateAverages();
+        calculateEstimates();
+        calculatePercents();
         return this;
     }
 
-    private void calculatePercent() {
+    private void calculatePercents() {
         clusterPercent = clusterCompleted * 100 / clusterTotal;
         keyspacePercent = keyspaceCompleted * 100 / keyspaceTotal;
         tablePercent = tableCompleted * 100 / tableTotal;
@@ -81,7 +81,7 @@ public class RepairStats {
         }
     }
 
-    private void calculateEstimate() {
+    private void calculateEstimates() {
         int clusterLeft = clusterTotal - clusterCompleted;
         int keyspaceLeft = keyspaceTotal - keyspaceCompleted;
         int tableLeft = tableTotal - tableCompleted;
@@ -91,17 +91,21 @@ public class RepairStats {
         tableEstimate = tableAverage.multipliedBy(tableLeft);
     }
 
-    private void calculateAverage() {
+    private void calculateAverages() {
         clusterAverage = clusterDuration.dividedBy(clusterCompleted);
         keyspaceAverage = keyspaceDuration.dividedBy(keyspaceCompleted);
         tableAverage = tableDuration.dividedBy(tableCompleted);
-
     }
 
     private void incrementCompleted() {
         clusterCompleted++;
         keyspaceCompleted++;
         tableCompleted++;
+    }
+    private void incrementErrors() {
+        clusterErrors++;
+        keyspaceErrors++;
+        tableErrors++;
     }
 
     private void increaseDurations(Duration elapsed) {
@@ -110,11 +114,6 @@ public class RepairStats {
         tableDuration = tableDuration.plus(elapsed);
     }
 
-    private void incrementErrors() {
-        clusterErrors++;
-        keyspaceErrors++;
-        tableErrors++;
-    }
 
     @JsonGetter(value = "timestamp")
     public String getTimestamp() {

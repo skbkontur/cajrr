@@ -1,8 +1,9 @@
 package ru.kontur.cajrr.api;
 
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.Response;
+import com.ecwid.consul.v1.kv.model.GetValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-import com.orbitz.consul.Consul;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -31,7 +32,7 @@ public class Elasticsearch  implements Managed {
     public int interval = 1000*15;
     private HttpPost httppost;
     private AtomicBoolean needPost = new AtomicBoolean(true);
-    private Consul consul;
+    private ConsulClient consul;
 
     @Override
     public void start() throws Exception {
@@ -67,9 +68,11 @@ public class Elasticsearch  implements Managed {
 
     private void postStats() {
         try {
-            Optional<String> stats = consul.keyValueClient().getValueAsString("/stats");
-            if (stats.isPresent()) {
-                String jsonString = stats.get();
+            Response<GetValue> stats = consul.getKVValue("/stats");
+            GetValue value = stats.getValue();
+            if (value != null) {
+                String jsonString = value.getDecodedValue();
+                jsonString = jsonString.replace("timestamp", "@timestamp");
                 StringEntity entity = new StringEntity(jsonString, "UTF8");
                 httppost.setEntity(entity);
                 HttpResponse response = httpClient.execute(httppost);
@@ -78,15 +81,14 @@ public class Elasticsearch  implements Managed {
                 }
                 httppost.releaseConnection();
                 LOG.info(jsonString);
-            } else {
-                LOG.warn("Repair stats not found");
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void setConsul(Consul consul) {
-        this.consul = consul;
+    public void setConsul(String consul) {
+        this.consul = new ConsulClient(consul);
     }
 }

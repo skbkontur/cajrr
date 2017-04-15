@@ -2,9 +2,13 @@ package ru.kontur.cajrr.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.service.StorageServiceMBean;
 
-import javax.management.*;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotificationListener;
+import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -17,14 +21,20 @@ import java.rmi.server.RMISocketFactory;
 import java.util.*;
 
 import static javax.management.JMX.newMBeanProxy;
-import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 
 public class Node implements Managed {
 
+    private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://[%s]:%d/jmxrmi";
+    private static final String ssObjName = "org.apache.cassandra.db:type=StorageService";
     private String host = "localhost";
     private Integer port = 7199;
     private String username;
     private String password;
+    private boolean connected;
+    private JMXConnector jmxc;
+    private StorageServiceMBean ssProxy;
+    private MBeanServerConnection mbeanServerConn;
+    private String partitioner = null;
 
     @JsonProperty
     public String getHost() {
@@ -67,14 +77,6 @@ public class Node implements Managed {
     @JsonProperty
     public void setPassword(String password) {this.password = password;}
 
-
-    private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://[%s]:%d/jmxrmi";
-    private static final String ssObjName = "org.apache.cassandra.db:type=StorageService";
-
-    private JMXConnector jmxc;
-    private StorageServiceMBean ssProxy;
-    private MBeanServerConnection mbeanServerConn;
-
     @Override
     public void start() throws IOException
     {
@@ -96,6 +98,7 @@ public class Node implements Managed {
         {
             ObjectName name = new ObjectName(ssObjName);
             ssProxy = newMBeanProxy(mbeanServerConn, name, StorageServiceMBean.class);
+            connected = true;
         }
         catch (MalformedObjectNameException e)
         {
@@ -107,6 +110,7 @@ public class Node implements Managed {
     @Override
     public void stop() throws IOException
     {
+        connected = false;
         jmxc.close();
     }
 
@@ -118,13 +122,10 @@ public class Node implements Managed {
             return RMISocketFactory.getDefaultSocketFactory();
     }
 
-
     public Map<String, String> getTokenToEndpointMap()
     {
         return ssProxy.getTokenToEndpointMap();
     }
-
-    private String partitioner = null;
 
     public String getPartitioner() {
         if(partitioner==null) {
@@ -183,4 +184,7 @@ public class Node implements Managed {
         return result;
     }
 
+    public boolean isConnected() {
+        return connected;
+    }
 }

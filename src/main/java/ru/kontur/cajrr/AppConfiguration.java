@@ -1,7 +1,6 @@
 package ru.kontur.cajrr;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.smoketurner.dropwizard.consul.ConsulFactory;
 import io.dropwizard.Configuration;
 import ru.kontur.cajrr.api.Elasticsearch;
 import ru.kontur.cajrr.api.Node;
@@ -24,9 +23,6 @@ public class AppConfiguration extends Configuration {
     public int interval = 60*60*24*7;
 
     @JsonProperty
-    public boolean connected = false;
-
-    @JsonProperty
     public String cluster;
 
     @JsonProperty
@@ -39,7 +35,16 @@ public class AppConfiguration extends Configuration {
     public Elasticsearch elastic;
 
     @JsonProperty
-    public ConsulFactory consul;
+    public String serviceName = "cajrr";
+
+    @JsonProperty
+    public String serviceHost = "localhost";
+
+    @JsonProperty
+    public Integer servicePort = 8080;
+
+    @JsonProperty
+    public String consul = "localhost:8500";
 
     public Node findNode(String endpoint) {
 
@@ -53,10 +58,5 @@ public class AppConfiguration extends Configuration {
     public Node defaultNode() {
         return nodes.get(0);
     }
-
-    public boolean isConnected() {
-        return connected;
-    }
-
 
 }
