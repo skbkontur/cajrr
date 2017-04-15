@@ -22,6 +22,7 @@ public class Elasticsearch  implements Managed {
     private static final Logger LOG = LoggerFactory.getLogger(Elasticsearch.class);
 
     private static HttpClient httpClient = HttpClients.createDefault();
+    private static Runnable task;
     @JsonProperty
     public String url;
     @JsonProperty
@@ -37,19 +38,21 @@ public class Elasticsearch  implements Managed {
     @Override
     public void start() throws Exception {
         initPost();
-        Runnable task = () -> {
-            while (needPost.get()) {
-                try {
-                    postStats();
-                    Thread.sleep(interval);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        if (task == null) {
+            task = () -> {
+                while (needPost.get()) {
+                    try {
+                        postStats();
+                        Thread.sleep(interval);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-            String threadName = Thread.currentThread().getName();
-            LOG.info("Elastic " + threadName);
-        };
-        new Thread(task).start();
+                String threadName = Thread.currentThread().getName();
+                LOG.info("Elastic " + threadName);
+            };
+            new Thread(task).start();
+        }
     }
 
     @Override
