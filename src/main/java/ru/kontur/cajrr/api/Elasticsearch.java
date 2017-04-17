@@ -37,6 +37,7 @@ public class Elasticsearch  implements Managed {
     private HttpPost httppost;
     private AtomicBoolean needPost = new AtomicBoolean(true);
     private ConsulClient consul;
+    private String statKey;
 
     @Override
     public void start() throws Exception {
@@ -74,7 +75,7 @@ public class Elasticsearch  implements Managed {
 
     private void postStats() {
         try {
-            Response<GetValue> stats = consul.getKVValue("/stats");
+            Response<GetValue> stats = consul.getKVValue(statKey);
             GetValue json = stats.getValue();
             if (json != null) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -98,5 +99,9 @@ public class Elasticsearch  implements Managed {
 
     public void setConsul(String consul) {
         this.consul = new ConsulClient(consul);
+    }
+
+    public void setStatKey(String statKey) {
+        this.statKey = statKey;
     }
 }
