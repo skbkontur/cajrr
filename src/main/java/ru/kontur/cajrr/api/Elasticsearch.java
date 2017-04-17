@@ -12,7 +12,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.joda.time.LocalDateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +66,7 @@ public class Elasticsearch  implements Managed {
 
     private void initPost() {
         needPost.set(true);
-        String posturl = String.format("%s/%s-%s", url, index, DateTime.now().toString("YYYY.MM.dd"));
+        String posturl = String.format("%s/%s-%s", url, index, DateTime.now(DateTimeZone.UTC).toString("YYYY.MM.dd"));
         httppost = new HttpPost(posturl);
         httppost.setHeader("Connection", "close");
         httppost.setHeader("Content-type", "application/json");
@@ -80,7 +80,7 @@ public class Elasticsearch  implements Managed {
             if (json != null) {
                 ObjectMapper mapper = new ObjectMapper();
                 HashMap result = mapper.readValue(json.getDecodedValue(), HashMap.class);
-                result.put("@timestamp", LocalDateTime.now().toString());
+                result.put("@timestamp", DateTime.now().toString());
                 String jsonString = mapper.writeValueAsString(result);
                 StringEntity entity = new StringEntity(jsonString, "UTF8");
                 httppost.setEntity(entity);
