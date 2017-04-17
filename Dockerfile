@@ -1,5 +1,10 @@
 FROM maven:onbuild-alpine
+
+RUN	apk add --no-cache tzdata
+
+ENV	TZ=UTC
+
 EXPOSE 8080
 EXPOSE 8081
 
-CMD ["java","-jar","target/cajrr-2.0-SNAPSHOT.jar", "server", "/etc/cajrr/config.yml"]
+CMD ["./docker-entrypoint.sh"]
