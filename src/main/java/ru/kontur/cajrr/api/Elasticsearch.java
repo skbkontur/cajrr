@@ -79,7 +79,7 @@ public class Elasticsearch  implements Managed {
             if (json != null) {
                 ObjectMapper mapper = new ObjectMapper();
                 HashMap result = mapper.readValue(json.getDecodedValue(), HashMap.class);
-                result.put("@timestamp", DateTime.now().toString());
+                result.put("@timestamp", DateTime.now(DateTimeZone.getDefault()).toString());
                 String jsonString = mapper.writeValueAsString(result);
                 StringEntity entity = new StringEntity(jsonString, "UTF8");
                 httppost.setEntity(entity);

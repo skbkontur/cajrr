@@ -160,6 +160,11 @@ public class RepairStats {
     }
 
     @JsonProperty
+    public String getTableEstimate() {
+        return formatDuration(this.tableEstimate);
+    }
+
+    @JsonProperty
     public String getLastClusterSuccess() {
         if (lastClusterSuccess != null) {
             return lastClusterSuccess.toString();
