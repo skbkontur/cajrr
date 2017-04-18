@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -34,14 +35,18 @@ public class Elasticsearch  implements Managed {
     public String key;
     @JsonProperty
     public int interval = 1000*15;
-    private HttpPost httppost;
+    private HttpPost httppost = new HttpPost();
     private AtomicBoolean needPost = new AtomicBoolean(true);
     private ConsulClient consul;
     private String statKey;
 
     @Override
     public void start() throws Exception {
-        initPost();
+        needPost.set(true);
+        httppost.setHeader("Connection", "close");
+        httppost.setHeader("Content-type", "application/json");
+        httppost.setHeader("Authorization", key);
+
         if (task == null) {
             task = () -> {
                 while (needPost.get()) {
@@ -64,17 +69,11 @@ public class Elasticsearch  implements Managed {
         needPost.set(false);
     }
 
-    private void initPost() {
-        needPost.set(true);
-        String posturl = String.format("%s/%s-%s", url, index, DateTime.now(DateTimeZone.UTC).toString("YYYY.MM.dd"));
-        httppost = new HttpPost(posturl);
-        httppost.setHeader("Connection", "close");
-        httppost.setHeader("Content-type", "application/json");
-        httppost.setHeader("Authorization", key);
-    }
-
     private void postStats() {
         try {
+            String posturl = String.format("%s/%s-%s", url, index, DateTime.now(DateTimeZone.UTC).toString("yyyy.MM.dd"));
+            LOG.info(posturl);
+            httppost.setURI(URI.create(posturl));
             Response<GetValue> stats = consul.getKVValue(statKey);
             GetValue json = stats.getValue();
             if (json != null) {
