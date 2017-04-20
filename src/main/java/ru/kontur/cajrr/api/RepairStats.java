@@ -31,6 +31,7 @@ public class RepairStats {
     public int clusterCompleted;
     public int clusterErrors;
     public float clusterPercent;
+    public String lastClusterSuccess;
     Duration duration = java.time.Duration.ZERO;
     Duration tableDuration = java.time.Duration.ZERO;
     Duration tableAverage = java.time.Duration.ZERO;
@@ -41,8 +42,6 @@ public class RepairStats {
     Duration clusterDuration = java.time.Duration.ZERO;
     Duration clusterAverage = java.time.Duration.ZERO;
     Duration clusterEstimate = java.time.Duration.ZERO;
-
-    LocalDateTime lastClusterSuccess;
 
     private static String formatDuration(Duration duration) {
         return DurationFormatUtils.formatDurationHMS(duration.toMillis());
@@ -77,7 +76,7 @@ public class RepairStats {
         tablePercent = tableCompleted * 100 / tableTotal;
 
         if (clusterPercent == 100) {
-            lastClusterSuccess = LocalDateTime.now();
+            lastClusterSuccess = LocalDateTime.now().toString();
         }
     }
 
@@ -164,14 +163,6 @@ public class RepairStats {
         return formatDuration(this.tableEstimate);
     }
 
-    @JsonProperty
-    public String getLastClusterSuccess() {
-        if (lastClusterSuccess != null) {
-            return lastClusterSuccess.toString();
-        } else {
-            return "";
-        }
-    }
     public void loadFromJson(String s) {
         try {
             HashMap result = new ObjectMapper().readValue(s, HashMap.class);
