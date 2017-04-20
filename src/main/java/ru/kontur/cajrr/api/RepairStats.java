@@ -31,7 +31,7 @@ public class RepairStats {
     public int clusterCompleted;
     public int clusterErrors;
     public float clusterPercent;
-    public String lastClusterSuccess;
+    public String lastClusterSuccess = "";
     Duration duration = java.time.Duration.ZERO;
     Duration tableDuration = java.time.Duration.ZERO;
     Duration tableAverage = java.time.Duration.ZERO;
