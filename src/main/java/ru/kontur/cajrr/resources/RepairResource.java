@@ -91,14 +91,18 @@ public class RepairResource {
                             count++;
                             if(!needToRepair.get()) break;
                         }
+                        LOG.info("Token completed");
                         if(!needToRepair.get()) break;
                     }
+                    LOG.info("Table completed: " + table.name);
                     if(!needToRepair.get()) break;
                     stats.clearTable();
                 }
+                LOG.info("Keyspace completed: " + keyspace);
                 if(!needToRepair.get()) break;
                 stats.clearKeyspace();
             }
+            LOG.info("Cluster completed: " + config.cluster);
             try {
                 Thread.sleep(config.interval);
                 stats.clearCluster();

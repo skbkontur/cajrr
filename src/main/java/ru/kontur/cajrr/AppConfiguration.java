@@ -32,6 +32,10 @@ public class AppConfiguration extends Configuration {
     public List<String> keyspaces = new ArrayList<>();
 
     @JsonProperty
+    public List<String> exclude = new ArrayList<>();
+
+
+    @JsonProperty
     public Elasticsearch elastic;
 
     @JsonProperty

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Path("/tables/{keyspace}")
 @Produces(MediaType.APPLICATION_JSON)
@@ -30,10 +31,17 @@ public class TableResource {
 
     List<Table> getTables(String keyspace) {
         List<Table> tables = config.defaultNode().getTables(keyspace);
+        tables = stripExclusions(tables);
         tables = combineZerosizedTables(tables);
         tables = calculateTableWeights(tables);
         Collections.sort(tables);
         return tables;
+    }
+
+    private List<Table> stripExclusions(List<Table> tables) {
+        return tables.stream()
+                .filter(x -> config.exclude.indexOf(x.name)==-1)
+                .collect(Collectors.toList());
     }
 
     private List<Table> combineZerosizedTables(List<Table> tables) {
