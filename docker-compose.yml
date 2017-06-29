@@ -48,26 +48,26 @@ services:
       LOCAL_JMX: "no"
 
 #---------------------------------------------- Networking
-  graphite:
-    image: nickstenning/graphite
-    restart: "unless-stopped"
-    networks:
-      app:
-        ipv4_address: 172.16.238.4
+#  graphite:
+#    image: nickstenning/graphite
+#    restart: "unless-stopped"
+#    networks:
+#      app:
+#        ipv4_address: 172.16.238.4
 
-  # Grafana - metric visualization
-  grafana:
-    image: grafana/grafana
-    restart: "unless-stopped"
-    environment:
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_METRICS_GRAPHITE_ADDRESS: "graphite"
-    ports:
-      - 3000:3000
-    networks:
-      app:
-        ipv4_address: 172.16.238.30
+#  # Grafana - metric visualization
+#  grafana:
+#    image: grafana/grafana
+#    restart: "unless-stopped"
+#    environment:
+#      GF_AUTH_ANONYMOUS_ENABLED: "true"
+#      GF_USERS_ALLOW_SIGN_UP: "false"
+#      GF_METRICS_GRAPHITE_ADDRESS: "graphite"
+#    ports:
+#      - 3000:3000
+#    networks:
+#      app:
+#        ipv4_address: 172.16.238.30
 
 networks:
   app:
