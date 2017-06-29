@@ -121,7 +121,7 @@ public class Repair extends JMXNotificationProgressListener {
 
     public Map<String,String> getOptions() {
         Map<String, String> result = new HashMap<>();
-        result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.SEQUENTIAL));
+        result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.PARALLEL));
         result.put(RepairOption.HOSTS_KEY, endpoint);
         if(!table.equals("") && !table.equals("*")) {
             result.put(RepairOption.COLUMNFAMILIES_KEY, table);

@@ -53,7 +53,8 @@ public class AppConfiguration extends Configuration {
     public Node findNode(String endpoint) {
 
         for(Node node: nodes) {
-            if (node.getHost().equals(endpoint)) {
+            String host = node.getHost();
+            if (host.equals(endpoint)) {
                 return node;
             }
         }
