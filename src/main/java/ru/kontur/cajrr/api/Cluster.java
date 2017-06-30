@@ -35,14 +35,9 @@ public class Cluster implements Managed {
             node.start();
         }
 
-        Runnable task = () -> {
-            repairResource.tableResource = tableResource;
-            repairResource.ringResource = ringResource;
-            String threadName = Thread.currentThread().getName();
-            LOG.info("Repair " + threadName);
-            repairResource.run();
-        };
-        new Thread(task).start();
+        repairResource.tableResource = tableResource;
+        repairResource.ringResource = ringResource;
+        repairResource.run();
     }
 
     @Override
