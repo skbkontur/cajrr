@@ -15,7 +15,7 @@ public class Fragment {
     private BigInteger start;
     private BigInteger end;
 
-    Fragment(long id, BigInteger start, BigInteger end) {
+    public Fragment(long id, BigInteger start, BigInteger end) {
         this.id = id;
         this.start = start;
         this.end = end;

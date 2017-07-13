@@ -1,21 +1,34 @@
 package ru.kontur.cajrr.api;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.Response;
+import com.ecwid.consul.v1.kv.model.GetValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import ru.kontur.cajrr.AppConfiguration;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RepairStats {
+    private static ObjectMapper mapper = new ObjectMapper();
 
+    private final ConsulClient consul;
+    private final String statKey;
+    private final MetricRegistry metrics;
     public String cluster;
     public String keyspace;
     public String table;
+    public String token;
     public String host;
 
     public long ID;
@@ -42,6 +55,18 @@ public class RepairStats {
     Duration clusterDuration = java.time.Duration.ZERO;
     Duration clusterAverage = java.time.Duration.ZERO;
     Duration clusterEstimate = java.time.Duration.ZERO;
+    private Map<String, Integer> totals;
+    private Meter clusterMeter;
+    private Meter keyspaceMeter;
+    private Meter tableMeter;
+    private Meter tokenMeter;
+
+    public RepairStats(AppConfiguration config, MetricRegistry metrics) {
+        this.metrics = metrics;
+        this.consul = new ConsulClient(config.consul);
+        this.statKey = config.statKey;
+        host = config.serviceHost;
+    }
 
     private static String formatDuration(Duration duration) {
         return DurationFormatUtils.formatDurationHMS(duration.toMillis());
@@ -55,18 +80,18 @@ public class RepairStats {
     }
 
     public RepairStats completeRepair(Repair repair, Duration elapsed)  {
-        this.ID = repair.id;
-        if (this.clusterDuration.isZero() && this.clusterCompleted > 0) {
-            this.clusterDuration = elapsed.multipliedBy(clusterCompleted);
-            this.keyspaceDuration = elapsed.multipliedBy(keyspaceCompleted);
-            this.tableDuration = elapsed.multipliedBy(tableCompleted);
-        }
-        this.duration = elapsed;
+        clusterMeter.mark();
+        keyspaceMeter.mark();
+        tableMeter.mark();
+        tokenMeter.mark();
+
+        /*
         incrementCompleted();
         increaseDurations(elapsed);
         calculateAverages();
         calculateEstimates();
         calculatePercents();
+        */
         return this;
     }
 
@@ -96,11 +121,6 @@ public class RepairStats {
         tableAverage = tableDuration.dividedBy(tableCompleted);
     }
 
-    private void incrementCompleted() {
-        clusterCompleted++;
-        keyspaceCompleted++;
-        tableCompleted++;
-    }
     private void incrementErrors() {
         clusterErrors++;
         keyspaceErrors++;
@@ -181,29 +201,66 @@ public class RepairStats {
         }
     }
 
-    public void clearCluster() {
-        clusterCompleted = 0;
-        clusterDuration = java.time.Duration.ZERO;
-        clearKeyspace();
-    }
-
-    public void clearKeyspace() {
-        keyspaceCompleted = 0;
-        keyspaceDuration = java.time.Duration.ZERO;
-        clearTable();
-    }
-
-    public void clearTable() {
-        tableCompleted = 0;
-        tableDuration = java.time.Duration.ZERO;
-    }
-
-
-    public int clearIfCompleted() {
-        if (clusterTotal <= clusterCompleted) {
-            clearCluster();
+    private RepairStats readStats() {
+        Response<GetValue> keyValueResponse = consul.getKVValue(statKey);
+        GetValue json = keyValueResponse.getValue();
+        if (json != null) {
+            loadFromJson(json.getDecodedValue());
         }
-        return clusterCompleted;
+
+        return this;
     }
 
+
+    private void saveStats(RepairStats stats) {
+        try {
+            String jsonString = mapper.writeValueAsString(stats);
+            consul.setKVValue(statKey, jsonString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int startPosition() {
+        return 0;
+    }
+
+    public void startCluster(String cluster) {
+        this.cluster = cluster;
+        String name = MetricRegistry.name("cluster", cluster, "repairs");
+        clusterMeter = metrics.meter(name);
+    }
+
+    public void startKeyspace(String keyspace) {
+        this.keyspace = keyspace;
+        String name = MetricRegistry.name("keyspace", keyspace, "repairs");
+        keyspaceMeter = metrics.meter(name);
+    }
+
+    public void initTotalsFromMap(Map<String, Integer> totals) {
+        this.totals = totals;
+    }
+
+    public void startTable(String table) {
+        this.table = table;
+        String name = MetricRegistry.name("table", table, "repairs");
+        tableMeter = metrics.meter(name);
+    }
+
+    public void startToken(String token) {
+        this.token = token;
+        String name = MetricRegistry.name("token", token, "repairs");
+        tokenMeter = metrics.meter(name);
+    }
+
+    @Override
+    public String toString() {
+        String jsonString = "";
+        try {
+            jsonString = mapper.writeValueAsString(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return jsonString;
+    }
 }

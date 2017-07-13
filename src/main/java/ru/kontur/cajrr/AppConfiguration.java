@@ -2,8 +2,8 @@ package ru.kontur.cajrr;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import ru.kontur.cajrr.api.Elasticsearch;
-import ru.kontur.cajrr.api.Node;
+import ru.kontur.cajrr.core.CassandraNode;
+import ru.kontur.cajrr.core.ElasticsearchHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 public class AppConfiguration extends Configuration {
 
     @JsonProperty
-    public int combinationThreshold = 10000;
+    public int combinationThreshold = 100000;
 
     @JsonProperty
     public int minSlicingSize = 10000000;
@@ -26,7 +26,7 @@ public class AppConfiguration extends Configuration {
     public String cluster;
 
     @JsonProperty
-    public List<Node> nodes = new ArrayList<>();
+    public List<CassandraNode> nodes = new ArrayList<>();
 
     @JsonProperty
     public List<String> keyspaces = new ArrayList<>();
@@ -34,9 +34,8 @@ public class AppConfiguration extends Configuration {
     @JsonProperty
     public List<String> exclude = new ArrayList<>();
 
-
     @JsonProperty
-    public Elasticsearch elastic;
+    public ElasticsearchHandler elastic;
 
     @JsonProperty
     public String serviceName = "cajrr";
@@ -50,9 +49,13 @@ public class AppConfiguration extends Configuration {
     @JsonProperty
     public String consul = "localhost:8500";
 
-    public Node findNode(String endpoint) {
+    @JsonProperty
+    public String statKey = "repair";
 
-        for(Node node: nodes) {
+
+    public CassandraNode findNode(String endpoint) {
+
+        for(CassandraNode node: nodes) {
             String host = node.getHost();
             if (host.equals(endpoint)) {
                 return node;
@@ -60,7 +63,7 @@ public class AppConfiguration extends Configuration {
         }
         return defaultNode();
     }
-    public Node defaultNode() {
+    public CassandraNode defaultNode() {
         return nodes.get(0);
     }
 

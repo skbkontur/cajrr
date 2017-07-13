@@ -24,15 +24,10 @@ public class TableResource {
 
     @GET
     public List<Table> tables(
-            @PathParam("keyspace") NonEmptyStringParam keyspace) {
-        String ks = retrieveKeyspace(keyspace);
-        return getTables(ks);
-    }
-
-    List<Table> getTables(String keyspace) {
+            @PathParam("keyspace") String keyspace) {
         List<Table> tables = config.defaultNode().getTables(keyspace);
         tables = stripExclusions(tables);
-        tables = combineZerosizedTables(tables);
+        tables = combineSmallTables(tables);
         tables = calculateTableWeights(tables);
         Collections.sort(tables);
         return tables;
@@ -44,7 +39,7 @@ public class TableResource {
                 .collect(Collectors.toList());
     }
 
-    private List<Table> combineZerosizedTables(List<Table> tables) {
+    private List<Table> combineSmallTables(List<Table> tables) {
         List<Table> result = new ArrayList<>();
         List<String> emptyNames = new ArrayList<>();
         long zeroSize = 0;
@@ -75,6 +70,7 @@ public class TableResource {
         }
         return tables;
     }
+
     private long findMaxSize(List<Table> tables) {
         long max = 0;
         for (Table table:tables) {
@@ -82,13 +78,4 @@ public class TableResource {
         }
         return max;
     }
-
-    private String retrieveKeyspace(NonEmptyStringParam keyspace) {
-        Optional<String> ks = keyspace.get();
-        if(!ks.isPresent()) {
-            throw new NotFoundException();
-        }
-        return ks.get();
-    }
-
 }

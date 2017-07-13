@@ -5,11 +5,14 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.kontur.cajrr.api.Cluster;
+import ru.kontur.cajrr.api.RepairStats;
+import ru.kontur.cajrr.core.CassandraNode;
 import ru.kontur.cajrr.health.RepairHealthCheck;
 import ru.kontur.cajrr.resources.RepairResource;
 import ru.kontur.cajrr.resources.RingResource;
 import ru.kontur.cajrr.resources.TableResource;
+
+import java.io.IOException;
 
 /**
  * Cajjr
@@ -19,6 +22,9 @@ public class App extends Application<AppConfiguration>
 {
     private static final Logger LOG = LoggerFactory.getLogger(App.class);
     private String name = "cajrr";
+    private RingResource ringResource;
+    private RepairResource repairResource;
+    private TableResource tableResource;
 
     public App() {
         super();
@@ -42,27 +48,47 @@ public class App extends Application<AppConfiguration>
     @Override
     public void run(AppConfiguration configuration,
                     Environment environment) throws Exception {
-        name = configuration.serviceName;
-        String statKey = String.format("stats/%s", configuration.cluster);
-        final RingResource ringResource = new RingResource(configuration);
-        final RepairResource repairResource = new RepairResource(configuration);
-        repairResource.setStatKey(statKey);
-        final TableResource tableResource = new TableResource(configuration);
+
+        initResources(configuration, environment);
+        initHealthcheck(configuration, environment);
+        initManagedObjects(configuration, environment);
+        RepairStats stats = new RepairStats(configuration, environment.metrics());
+        repairResource.run(stats);
+    }
+
+    private void initManagedObjects(AppConfiguration configuration, Environment environment) {
+        if (null != configuration.elastic) {
+            configuration.elastic.setStatKey(configuration.statKey);
+            configuration.elastic.setConsul(configuration.consul);
+            environment.lifecycle().manage(configuration.elastic);
+        }
+
+        for(CassandraNode node: configuration.nodes) {
+            try {
+                node.addListener(repairResource);
+                environment.lifecycle().manage(node);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void initHealthcheck(AppConfiguration configuration, Environment environment) {
+        final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration);
+        environment.healthChecks().register("repair", healthCheck);
+    }
+
+    private void initResources(AppConfiguration configuration, Environment environment) {
+        repairResource = new RepairResource(configuration);
+        ringResource = new RingResource(configuration);
+        tableResource = new TableResource(configuration);
+
+        repairResource.ringResource = ringResource;
+        repairResource.tableResource = tableResource;
         environment.jersey().register(repairResource);
         environment.jersey().register(tableResource);
         environment.jersey().register(ringResource);
 
-        final RepairHealthCheck healthCheck = new RepairHealthCheck(configuration);
-        environment.healthChecks().register("repair", healthCheck);
-
-        Cluster cluster = new Cluster(configuration, repairResource, ringResource, tableResource);
-        environment.lifecycle().manage(cluster);
-
-
-        if (null != configuration.elastic) {
-            configuration.elastic.setStatKey(statKey);
-            configuration.elastic.setConsul(configuration.consul);
-            environment.lifecycle().manage(configuration.elastic);
-        }
     }
 }

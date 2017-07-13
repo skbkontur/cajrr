@@ -9,39 +9,36 @@ public class Table implements Comparable<Table>{
     @JsonProperty
     public long size;
 
-    private int slices = 1;
-    private double weight = 1;
+    @JsonProperty
+    public int slices;
+
+    @JsonProperty
+    public double weight;
 
     public Table(String sName, long size) {
         this.name = sName;
         this.size = size;
     }
 
-    @JsonProperty
-    public double getWeight() {
-        return weight;
+    public void setWeight(double weight, int minSlicingSize, int maxSlices) {
+        this.weight = weight;
+        this.slices = calculateSlicesCount(minSlicingSize, maxSlices);
     }
 
-    public void setWeight(double weight, int minSlicingSize, int maxSlices) {
-
-        this.weight = weight;
+    private int calculateSlicesCount(int minSlicingSize, int maxSlices) {
+        int slices = 1;
         if (this.size > minSlicingSize) {
-            this.slices = (int) (maxSlices * weight);
-            if (this.slices == 0) {
-                this.slices = 1;
+            slices = (int) (maxSlices * weight);
+            if (slices == 0) {
+                slices = 1;
             }
         }
+        return slices;
     }
 
     public int compareTo(Table t)
     {
         return t.size - size > 0 ? 1 : -1;
     }
-
-    @JsonProperty
-    public int getSlices() {
-        return this.slices;
-    }
-
 
 }

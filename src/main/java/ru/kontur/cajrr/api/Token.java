@@ -12,22 +12,27 @@ public class Token {
     private final BigInteger RANGE_MIN;
     private final BigInteger RANGE_MAX;
     private final BigInteger RANGE_SIZE;
+
     @JsonProperty
     public String endpoint;
-    private BigInteger start;
-    private BigInteger size;
-    private List<Fragment> ranges;
+    @JsonProperty
+    public List<Fragment> fragments;
 
-    Token(BigInteger key, Ring ring) {
-        this.start = key;
-        RANGE_MIN = ring.RANGE_MIN;
-        RANGE_MAX = ring.RANGE_MAX;
-        RANGE_SIZE = ring.RANGE_SIZE;
+    public String getStart() {
+        return start.toString();
     }
 
+    private BigInteger start;
+    private BigInteger size;
 
+    public Token(BigInteger key, BigInteger rangeMin, BigInteger rangeMax, BigInteger rangeSize) {
+        this.start = key;
+        RANGE_MIN = rangeMin;
+        RANGE_MAX = rangeMax;
+        RANGE_SIZE = rangeSize;
+    }
 
-    void setNext(Token next) {
+    public void setNext(Token next) {
         BigInteger stop = next.start;
         size = stop.subtract(start);
 
@@ -36,7 +41,7 @@ public class Token {
         }
     }
 
-    List<Fragment> fragment(int slices, AtomicLong counter) {
+    public List<Fragment> fragment(int slices, AtomicLong counter) {
         List<Fragment> result = Lists.newArrayList();
 
 
@@ -63,17 +68,8 @@ public class Token {
             frag.endpoint = this.endpoint;
             result.add(frag);
         }
-        ranges = result;
+        fragments = result;
         return result;
     }
 
-    @JsonProperty
-    public List<Fragment> getRanges() {
-        return ranges;
-    }
-
-    @JsonProperty
-    public String getKey() {
-        return start.toString();
-    }
 }

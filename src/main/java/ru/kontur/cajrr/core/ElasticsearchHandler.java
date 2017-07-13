@@ -1,4 +1,4 @@
-package ru.kontur.cajrr.api;
+package ru.kontur.cajrr.core;
 
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.Response;
@@ -21,9 +21,9 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Elasticsearch  implements Managed {
+public class ElasticsearchHandler implements Managed {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Elasticsearch.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchHandler.class);
 
     private static HttpClient httpClient = HttpClients.createDefault();
     private static Runnable task;
@@ -39,6 +39,7 @@ public class Elasticsearch  implements Managed {
     private AtomicBoolean needPost = new AtomicBoolean(true);
     private ConsulClient consul;
     private String statKey;
+    private Thread thread;
 
     @Override
     public void start() throws Exception {
@@ -60,13 +61,16 @@ public class Elasticsearch  implements Managed {
                 String threadName = Thread.currentThread().getName();
                 LOG.info("Elastic " + threadName);
             };
-            new Thread(task).start();
         }
+        thread = new Thread(task);
+        thread.start();
     }
 
     @Override
     public void stop() throws Exception {
         needPost.set(false);
+        thread.interrupt();
+        thread.join();
     }
 
     private void postStats() {

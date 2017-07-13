@@ -1,14 +1,15 @@
-package ru.kontur.cajrr.api;
+package ru.kontur.cajrr.core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.service.StorageServiceMBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.kontur.cajrr.api.Table;
+import ru.kontur.cajrr.resources.RepairResource;
 
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotificationListener;
-import javax.management.ObjectName;
+import javax.management.*;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -22,10 +23,12 @@ import java.util.*;
 
 import static javax.management.JMX.newMBeanProxy;
 
-public class Node implements Managed {
+public class CassandraNode implements Managed {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
     private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://[%s]:%d/jmxrmi";
     private static final String ssObjName = "org.apache.cassandra.db:type=StorageService";
+    private static final String aesObjName = "org.apache.cassandra.internal:type=AntiEntropySessions";
     private String host = "localhost";
     private Integer port = 7199;
     private String username;
@@ -122,11 +125,6 @@ public class Node implements Managed {
             return RMISocketFactory.getDefaultSocketFactory();
     }
 
-    public Map<String, String> getTokenToEndpointMap()
-    {
-        return ssProxy.getTokenToEndpointMap();
-    }
-
     public String getPartitioner() {
         if(partitioner==null) {
             partitioner = ssProxy.getPartitionerName();
@@ -134,12 +132,53 @@ public class Node implements Managed {
         return partitioner;
     }
 
-
-    public int repairAsync(String keyspace, Map<String, String> options) {
-        return ssProxy.repairAsync(keyspace, options);
+    public String getConnectionId() throws IOException {
+        return jmxc.getConnectionId();
     }
 
-    public void addListener(NotificationListener observer) {
+    /**
+     * @return true if any repairs are running on the node.
+     */
+    public boolean isRepairRunning() {
+        // Check if AntiEntropySession is actually running on the node
+        try {
+            ObjectName name = new ObjectName(aesObjName);
+            int activeCount = (Integer) mbeanServerConn.getAttribute(name, "ActiveCount");
+            long pendingCount = (Long) mbeanServerConn.getAttribute(name, "PendingTasks");
+            return activeCount + pendingCount != 0;
+        } catch (IOException ignored) {
+            LOG.warn("Failed to connect to " + host + " using JMX");
+        } catch (MalformedObjectNameException ignored) {
+            LOG.error("Internal error, malformed name");
+        } catch (InstanceNotFoundException e) {
+            // This happens if no repair has yet been run on the node
+            // The AntiEntropySessions object is created on the first repair
+            return false;
+        } catch (Exception e) {
+            LOG.error("Error getting attribute from JMX", e);
+        }
+        // If uncertain, assume it's running
+        return true;
+    }
+
+    public int repairAsync(String keyspace, Map<String, String> options) {
+        int command = -1;
+        try {
+            if (!isConnected()) {
+                start();
+            }
+            command = ssProxy.repairAsync(keyspace, options);
+        } catch (Exception e) {
+            LOG.error(e.getCause().getMessage());
+            e.getCause().printStackTrace();
+        }
+        return command;
+    }
+
+    public void addListener(NotificationListener observer) throws IOException {
+        if(null==jmxc) {
+            start();
+        }
         jmxc.addConnectionNotificationListener(observer, null, null);
         ssProxy.addNotificationListener(observer, null, null);
     }
@@ -185,6 +224,12 @@ public class Node implements Managed {
     }
 
     public boolean isConnected() {
-        return connected;
+        try {
+            String connectionId = getConnectionId();
+            return null != connectionId && connectionId.length() > 0;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

@@ -4,7 +4,7 @@ import com.codahale.metrics.health.HealthCheck;
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.agent.model.NewService;
 import ru.kontur.cajrr.AppConfiguration;
-import ru.kontur.cajrr.api.Node;
+import ru.kontur.cajrr.core.CassandraNode;
 
 import java.util.Arrays;
 
@@ -35,7 +35,7 @@ public class RepairHealthCheck extends HealthCheck {
 
     @Override
     protected Result check() throws Exception {
-        for (Node n : config.nodes) {
+        for (CassandraNode n : config.nodes) {
             if (!n.isConnected()) {
                 return Result.unhealthy(String.format("Node %s is not connected", n.getHost()));
             }

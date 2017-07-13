@@ -8,19 +8,11 @@ import java.util.regex.Pattern;
 
 public class Range {
 
+    @JsonProperty
     public BigInteger start;
 
-    private BigInteger end;
-
     @JsonProperty
-    public String getStart() {
-        return start.toString();
-    }
-
-    @JsonProperty
-    public String getEnd() {
-        return end.toString();
-    }
+    public BigInteger end;
 
     @JsonProperty
     public String endpoints;

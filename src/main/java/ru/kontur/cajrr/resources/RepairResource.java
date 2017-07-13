@@ -4,11 +4,17 @@ import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.kv.model.GetValue;
 import org.apache.cassandra.utils.concurrent.SimpleCondition;
+import org.apache.cassandra.utils.progress.ProgressEvent;
+import org.apache.cassandra.utils.progress.ProgressEventType;
+import org.apache.cassandra.utils.progress.jmx.JMXNotificationProgressListener;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.*;
+import ru.kontur.cajrr.core.CassandraNode;
+import ru.kontur.cajrr.api.Repair;
+import ru.kontur.cajrr.api.Token;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -17,59 +23,62 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Path("/repair")
 @Produces(MediaType.APPLICATION_JSON)
-public class RepairResource {
+public class RepairResource extends JMXNotificationProgressListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
-    private static ObjectMapper mapper = new ObjectMapper();
     private final AppConfiguration config;
-    private final ConsulClient consul;
     public TableResource tableResource;
     public RingResource ringResource;
     private AtomicBoolean needToRepair = new AtomicBoolean(true);
     private boolean error;
-    private String statKey;
+
+    private int command = 0;
+    private SimpleCondition condition;
+    private String message;
+    private double percentage;
+    private int progressCount;
+    private RepairStats stats;
 
     public RepairResource(AppConfiguration config) {
         this.config = config;
-        this.consul = new ConsulClient(config.consul);
     }
 
-    public void run() {
+    public void run(RepairStats stats) {
+        this.stats = stats;
+        int startAt = stats.startPosition();
 
         while (needToRepair.get()) {
-            RepairStats stats = readStats();
-
-
-            stats.cluster = config.cluster;
-            stats.clusterTotal = totalCluster(config.keyspaces);
-            int completed = stats.clearIfCompleted();
+            Map<String, Integer> totals = calculateTotals(config.cluster, config.keyspaces);
+            stats.initTotalsFromMap(totals);
+            stats.startCluster(config.cluster);
             int count = 0;
 
             for (String keyspace : config.keyspaces) {
-                stats.keyspace = keyspace;
-                stats.keyspaceTotal = totalKeyspace(keyspace);
+                stats.startKeyspace(keyspace);
 
-                List<Table> tables = tableResource.getTables(keyspace);
+                List<Table> tables = tableResource.tables(keyspace);
                 for (Table table : tables) {
-                    stats.table = table.name;
-                    stats.tableTotal = totalTable(keyspace, table);
+                    stats.startTable(table.name);
 
-
-                    List<Token> tokens = ringResource.describe(keyspace, table.getSlices());
+                    List<Token> tokens = ringResource.describe(keyspace, table.slices);
                     for (Token token : tokens) {
-                        List<Fragment> ranges = token.getRanges();
+                        stats.startToken(token.getStart());
 
-                        for (Fragment frag : ranges) {
-                            if (count >= completed) {
+                        List<Fragment> fragments = token.fragments;
+                        for (Fragment frag : fragments) {
+                            if (count >= startAt) {
                                 Repair repair = new Repair();
                                 repair.started = Instant.now();
 
-                                repair.id = frag.id;
+                                repair.id = count;
                                 repair.cluster = config.cluster;
                                 repair.keyspace = keyspace;
                                 repair.table = table.name;
@@ -77,91 +86,86 @@ public class RepairResource {
                                 repair.start = frag.getStart();
                                 repair.end = frag.getEnd();
 
-                                SimpleCondition condition = new SimpleCondition();
-                                Duration elapsed = registerRepair(repair, condition);
+                                Duration elapsed = runRepair(repair);
                                 if (error) {
+                                    // TODO - error!
                                     stats = stats.errorRepair(repair, elapsed);
                                 } else {
                                     stats = stats.completeRepair(repair, elapsed);
                                 }
                                 LOG.info(stats.toString());
-
-                                saveStats(stats);
                             }
                             count++;
-                            if(!needToRepair.get()) break;
+                            if (!needToRepair.get()) break;
                         }
                         LOG.info("Token completed");
-                        if(!needToRepair.get()) break;
                     }
                     LOG.info("Table completed: " + table.name);
-                    if(!needToRepair.get()) break;
-                    stats.clearTable();
                 }
                 LOG.info("Keyspace completed: " + keyspace);
-                if(!needToRepair.get()) break;
-                stats.clearKeyspace();
             }
-            LOG.info("Cluster completed: " + config.cluster);
+            LOG.info("CassandraCluster completed: " + config.cluster);
             try {
                 Thread.sleep(config.interval);
-                stats.clearCluster();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private RepairStats readStats() {
-        RepairStats result = new RepairStats();
-        Response<GetValue> keyValueResponse = consul.getKVValue(statKey);
-        GetValue json = keyValueResponse.getValue();
-        if (json != null) {
-            result.loadFromJson(json.getDecodedValue());
-        }
+    private Map<String, Integer> calculateTotals(String cluster, List<String> keyspaces) {
+        HashMap<String, Integer> result = new HashMap<>();
+        int clusterTotal = 0;
+        for (String keyspace : keyspaces) {
+            int keyspaceTotal = 0;
+            List<Table> tables = tableResource.tables(keyspace);
 
-        result.host = config.serviceHost;
+            for (Table table : tables) {
+                int tableTotal = 0;
+                List<Token> tokens = ringResource.describe(keyspace, table.slices);
+
+                for (Token token : tokens) {
+                    int tokenTotal = token.fragments.size();
+                    String name = String.join("/",
+                            Arrays.asList(cluster, keyspace, table.name, token.getStart()));
+                    result.put(name, tokenTotal);
+                    tableTotal += tokenTotal;
+                }
+                String name = String.join("/",
+                        Arrays.asList(cluster, keyspace, table.name));
+                result.put(name, tableTotal);
+                keyspaceTotal += tableTotal;
+            }
+            String name = String.join("/", Arrays.asList(cluster, keyspace));
+            result.put(name, keyspaceTotal);
+            clusterTotal += keyspaceTotal;
+        }
+        result.put(cluster, clusterTotal);
         return result;
     }
 
-    private void saveStats(RepairStats stats) {
+    private Duration runRepair(Repair repair) {
+        this.error = false;
+        condition = new SimpleCondition();
+        LOG.info("Starting fragment: " + repair.toString());
+        Instant start = repair.started;
         try {
-            String jsonString = mapper.writeValueAsString(stats);
-            consul.setKVValue(statKey, jsonString);
-        } catch (IOException e) {
+            CassandraNode proxy = config.findNode(repair.getProxyNode());
+            command = proxy.repairAsync(repair.keyspace, repair.getOptions());
+
+            if (command <= 0) {
+                LOG.warn(String.format("There is nothing to repair in keyspace %s", repair.keyspace));
+            } else {
+                condition.await();
+            }
+        } catch (Exception e) {
+            this.error = true;
             e.printStackTrace();
         }
+        Instant end = Instant.now();
+        return Duration.between(start, end);
     }
 
-
-    private int totalKeyspace(String keyspace) {
-        int result = 0;
-        List<Table> tables = tableResource.getTables(keyspace);
-
-        for (Table table : tables) {
-            result += totalTable(keyspace, table);
-        }
-        return result;
-    }
-
-    private int totalTable(String keyspace, Table table) {
-        int result = 0;
-        List<Token> tokens = ringResource.describe(keyspace, table.getSlices());
-
-        for (Token token : tokens) {
-            List<Fragment> ranges = token.getRanges();
-            result += ranges.size();
-        }
-        return result;
-    }
-
-    private int totalCluster(List<String> keyspaces) {
-        int result = 0;
-        for (String keyspace: keyspaces) {
-            result += totalKeyspace(keyspace);
-        }
-        return result;
-    }
 
     @GET
     @Path("/stop")
@@ -170,37 +174,34 @@ public class RepairResource {
         return "OK";
     }
 
-
-    private Duration registerRepair(Repair repair, SimpleCondition condition) {
-        LOG.info("Starting fragment: " + repair.toString());
-        Instant start = repair.started;
-        try {
-            Node proxy = config.findNode(repair.getProxyNode());
-            repair.setCondition(condition);
-            proxy.addListener(repair);
-            repair.command = proxy.repairAsync(repair.keyspace, repair.getOptions());
-
-            if (repair.command <= 0)
-            {
-                LOG.warn(String.format("There is nothing to repair in keyspace %s", repair.keyspace));
-            }
-            else
-            {
-                condition.await();
-                this.error = false;
-            }
-
-            proxy.removeListener(repair);
-
-        }   catch (Exception e) {
-            this.error = true;
-            e.printStackTrace();
-        }
-        Instant end = Instant.now();
-        return Duration.between(start, end);
+    @GET
+    @Path("/stats")
+    public String stats() {
+        return stats.toString();
     }
 
-    public void setStatKey(String statKey) {
-        this.statKey = statKey;
+    @Override
+    public boolean isInterestedIn(String tag) {
+        return tag.equals("repair:" + command);
+    }
+
+    @Override
+    public void progress(String s, ProgressEvent event) {
+        ProgressEventType type = event.getType();
+        message = event.getMessage();
+        percentage = event.getProgressPercentage();
+        progressCount = event.getProgressCount();
+
+        switch (type) {
+            case COMPLETE:
+                condition.signalAll();
+                break;
+            case START:
+                break;
+            case SUCCESS:
+                break;
+            case PROGRESS:
+                break;
+        }
     }
 }

@@ -48,12 +48,12 @@ services:
       LOCAL_JMX: "no"
 
 #---------------------------------------------- Networking
-#  graphite:
-#    image: nickstenning/graphite
-#    restart: "unless-stopped"
-#    networks:
-#      app:
-#        ipv4_address: 172.16.238.4
+  graphite:
+    image: nickstenning/graphite
+    restart: "unless-stopped"
+    networks:
+      app:
+        ipv4_address: 172.16.238.4
 
 #  # Grafana - metric visualization
 #  grafana:
