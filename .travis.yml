@@ -31,7 +31,7 @@ deploy:
     - "${RELEASE_PKG_RPM}"
     - "${RELEASE_PKG_DEB}"
 - provider: script
-  script: "curl -sS --fail -F \"uploadfile=@${RELEASE_PKG_RPM}\" -H 'token: ${UPLOAD_TOKEN}' \"${UPLOAD_URL}\""
+  script: "curl -sS --fail -F \"uploadfile=@${PACKAGE_NAME}\" -H 'token: ${UPLOAD_TOKEN}' \"${UPLOAD_URL}\""
   skip_cleanup: true
   on:
     repo: skbkontur/cajrr
