@@ -11,10 +11,10 @@ import java.util.List;
 public class AppConfiguration extends Configuration {
 
     @JsonProperty
-    public int combinationThreshold = 100000;
+    public int combinationThreshold = 1000000;
 
     @JsonProperty
-    public int minSlicingSize = 10000000;
+    public int minSlicingSize = 100000000;
 
     @JsonProperty
     public int maxSlices = 50;

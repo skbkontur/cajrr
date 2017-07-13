@@ -60,8 +60,12 @@ public class RepairStats {
     private Meter keyspaceMeter;
     private Meter tableMeter;
     private Meter tokenMeter;
+    private Meter clusterErrorMeter;
+    private Meter keyspaceErrorMeter;
+    private Meter tableErrorMeter;
+    private Meter tokenErrorMeter;
 
-    public RepairStats(AppConfiguration config, MetricRegistry metrics) {
+    public RepairStats(AppConfiguration config, MetricRegistry metrics, Map<String, Integer> totals) {
         this.metrics = metrics;
         this.consul = new ConsulClient(config.consul);
         this.statKey = config.statKey;
@@ -72,26 +76,20 @@ public class RepairStats {
         return DurationFormatUtils.formatDurationHMS(duration.toMillis());
     }
 
-    public RepairStats errorRepair(Repair repair, Duration elapsed) {
-        this.ID = repair.id;
-        this.duration = elapsed;
-        incrementErrors();
+    public RepairStats errorRepair() {
+        clusterErrorMeter.mark();
+        keyspaceErrorMeter.mark();
+        tableErrorMeter.mark();
+        tokenErrorMeter.mark();
         return this;
     }
 
-    public RepairStats completeRepair(Repair repair, Duration elapsed)  {
+    public RepairStats completeRepair()  {
         clusterMeter.mark();
         keyspaceMeter.mark();
         tableMeter.mark();
         tokenMeter.mark();
 
-        /*
-        incrementCompleted();
-        increaseDurations(elapsed);
-        calculateAverages();
-        calculateEstimates();
-        calculatePercents();
-        */
         return this;
     }
 
@@ -251,6 +249,7 @@ public class RepairStats {
         this.token = token;
         String name = MetricRegistry.name("token", token, "repairs");
         tokenMeter = metrics.meter(name);
+
     }
 
     @Override

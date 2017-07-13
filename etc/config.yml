@@ -33,19 +33,19 @@ logging:
     io.dropwizard: INFO
     org.eclipse.jetty: INFO
   appenders:
-    - type: file
-      currentLogFilename: /var/log/cajrr/cajrr.log
-      threshold: ALL
-      archive: true
-      archivedLogFilenamePattern: /var/log/cajrr/cajrr-%d.log
-      archivedFileCount: 5
-      logFormat: "%-6level [%d] [%t] %logger{5} - %msg %n"
+    - type: console
+#    - type: file
+#      currentLogFilename: /var/log/cajrr/cajrr.log
+#      threshold: ALL
+#      archive: true
+#      archivedLogFilenamePattern: /var/log/cajrr/cajrr-%d.log
+#      archivedFileCount: 5
+#      logFormat: "%-6level [%d] [%t] %logger{5} - %msg %n"
 
 metrics:
   frequency: 1 minute
   reporters:
     - type: graphite
-      host: 172.16.238.4
+      host: graphite-relay.skbkontur.ru
       port: 2003
-      frequency: 10 seconds
-      prefix: Cassandra.Repair.localhost
+      prefix: DevOps.Repair.localhost

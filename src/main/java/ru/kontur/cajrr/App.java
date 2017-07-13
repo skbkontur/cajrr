@@ -1,6 +1,9 @@
 package ru.kontur.cajrr;
 
+import com.codahale.metrics.MetricRegistry;
 import io.dropwizard.Application;
+import io.dropwizard.metrics.MetricsFactory;
+import io.dropwizard.metrics.ReporterFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
@@ -52,8 +55,7 @@ public class App extends Application<AppConfiguration>
         initResources(configuration, environment);
         initHealthcheck(configuration, environment);
         initManagedObjects(configuration, environment);
-        RepairStats stats = new RepairStats(configuration, environment.metrics());
-        repairResource.run(stats);
+        repairResource.run();
     }
 
     private void initManagedObjects(AppConfiguration configuration, Environment environment) {
@@ -80,7 +82,7 @@ public class App extends Application<AppConfiguration>
     }
 
     private void initResources(AppConfiguration configuration, Environment environment) {
-        repairResource = new RepairResource(configuration);
+        repairResource = new RepairResource(configuration, environment);
         ringResource = new RingResource(configuration);
         tableResource = new TableResource(configuration);
 

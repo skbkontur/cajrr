@@ -1,26 +1,23 @@
 package ru.kontur.cajrr.resources;
 
-import com.ecwid.consul.v1.ConsulClient;
-import com.ecwid.consul.v1.Response;
-import com.ecwid.consul.v1.kv.model.GetValue;
+import io.dropwizard.setup.Environment;
+import org.apache.cassandra.repair.RepairParallelism;
+import org.apache.cassandra.repair.messages.RepairOption;
 import org.apache.cassandra.utils.concurrent.SimpleCondition;
 import org.apache.cassandra.utils.progress.ProgressEvent;
 import org.apache.cassandra.utils.progress.ProgressEventType;
 import org.apache.cassandra.utils.progress.jmx.JMXNotificationProgressListener;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.kontur.cajrr.AppConfiguration;
 import ru.kontur.cajrr.api.*;
 import ru.kontur.cajrr.core.CassandraNode;
-import ru.kontur.cajrr.api.Repair;
 import ru.kontur.cajrr.api.Token;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -35,6 +32,7 @@ public class RepairResource extends JMXNotificationProgressListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
     private final AppConfiguration config;
+    private final Environment env;
     public TableResource tableResource;
     public RingResource ringResource;
     private AtomicBoolean needToRepair = new AtomicBoolean(true);
@@ -47,16 +45,19 @@ public class RepairResource extends JMXNotificationProgressListener {
     private int progressCount;
     private RepairStats stats;
 
-    public RepairResource(AppConfiguration config) {
+    public RepairResource(AppConfiguration config, Environment environment) {
+
         this.config = config;
+        this.env = environment;
     }
 
-    public void run(RepairStats stats) {
-        this.stats = stats;
+    public void run() {
+        Map<String, Integer> totals = calculateTotals(config.cluster, config.keyspaces);
+
+        stats = new RepairStats(config, env.metrics(), totals);
         int startAt = stats.startPosition();
 
         while (needToRepair.get()) {
-            Map<String, Integer> totals = calculateTotals(config.cluster, config.keyspaces);
             stats.initTotalsFromMap(totals);
             stats.startCluster(config.cluster);
             int count = 0;
@@ -75,23 +76,12 @@ public class RepairResource extends JMXNotificationProgressListener {
                         List<Fragment> fragments = token.fragments;
                         for (Fragment frag : fragments) {
                             if (count >= startAt) {
-                                Repair repair = new Repair();
-                                repair.started = Instant.now();
 
-                                repair.id = count;
-                                repair.cluster = config.cluster;
-                                repair.keyspace = keyspace;
-                                repair.table = table.name;
-                                repair.endpoint = frag.endpoint;
-                                repair.start = frag.getStart();
-                                repair.end = frag.getEnd();
-
-                                Duration elapsed = runRepair(repair);
+                                Duration elapsed = runRepair(keyspace, table.name, frag);
                                 if (error) {
-                                    // TODO - error!
-                                    stats = stats.errorRepair(repair, elapsed);
+                                    stats = stats.errorRepair();
                                 } else {
-                                    stats = stats.completeRepair(repair, elapsed);
+                                    stats = stats.completeRepair();
                                 }
                                 LOG.info(stats.toString());
                             }
@@ -144,17 +134,21 @@ public class RepairResource extends JMXNotificationProgressListener {
         return result;
     }
 
-    private Duration runRepair(Repair repair) {
+    private Duration runRepair(String keyspace, String table, Fragment frag) {
+        Instant start = Instant.now();
+
+        String endpoint = frag.endpoint;
+        String begin = frag.getStart();
+        String end = frag.getEnd();
         this.error = false;
         condition = new SimpleCondition();
-        LOG.info("Starting fragment: " + repair.toString());
-        Instant start = repair.started;
+        LOG.info("Starting fragment: " + begin + ":" + end);
         try {
-            CassandraNode proxy = config.findNode(repair.getProxyNode());
-            command = proxy.repairAsync(repair.keyspace, repair.getOptions());
+            CassandraNode proxy = config.findNode(getProxyNode(endpoint));
+            command = proxy.repairAsync(keyspace, getOptions(endpoint, table, begin, end));
 
             if (command <= 0) {
-                LOG.warn(String.format("There is nothing to repair in keyspace %s", repair.keyspace));
+                LOG.warn(String.format("There is nothing to repair in keyspace %s", keyspace));
             } else {
                 condition.await();
             }
@@ -162,10 +156,25 @@ public class RepairResource extends JMXNotificationProgressListener {
             this.error = true;
             e.printStackTrace();
         }
-        Instant end = Instant.now();
-        return Duration.between(start, end);
+        Instant finish = Instant.now();
+        return Duration.between(start, finish);
     }
 
+    private Map<String,String> getOptions(String endpoint, String table, String begin, String end) {
+        Map<String, String> result = new HashMap<>();
+        result.put(RepairOption.PARALLELISM_KEY, String.valueOf(RepairParallelism.PARALLEL));
+        result.put(RepairOption.HOSTS_KEY, endpoint);
+        if(!table.equals("") && !table.equals("*")) {
+            result.put(RepairOption.COLUMNFAMILIES_KEY, table);
+        }
+        result.put(RepairOption.RANGES_KEY, String.format("%s:%s", begin, end));
+        return result;
+    }
+
+    private String getProxyNode(String endpoint) {
+        String[] parts = endpoint.split(",");
+        return parts[0].trim();
+    }
 
     @GET
     @Path("/stop")
