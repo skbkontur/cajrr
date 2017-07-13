@@ -17,6 +17,7 @@ before_deploy:
   - export RELEASE_PKG_TAR=$(ls build/cajrr*.tar.gz)
   - export RELEASE_PKG_RPM=$(ls build/cajrr*.rpm)
   - export RELEASE_PKG_DEB=$(ls build/cajrr*.deb)
+  - export PACKAGE_NAME=$(ls build/cajrr*.rpm | tail -n1)
 deploy:
 - provider: releases
   api_key:
