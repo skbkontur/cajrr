@@ -54,30 +54,30 @@ public class RepairResource extends JMXNotificationProgressListener {
     public void run() {
         Map<String, Integer> totals = calculateTotals(config.cluster, config.keyspaces);
 
-        stats = new RepairStats(config, env.metrics(), totals);
+        stats = new RepairStats(config, totals);
         int startAt = stats.startPosition();
 
         while (needToRepair.get()) {
             stats.initTotalsFromMap(totals);
-            stats.startCluster(config.cluster);
+            stats.startCluster(config.cluster, 0);
             int count = 0;
 
             for (String keyspace : config.keyspaces) {
-                stats.startKeyspace(keyspace);
+                stats.startKeyspace(keyspace,0);
 
                 List<Table> tables = tableResource.tables(keyspace);
                 for (Table table : tables) {
-                    stats.startTable(table.name);
+                    stats.startTable(table.name,0);
 
                     List<Token> tokens = ringResource.describe(keyspace, table.slices);
                     for (Token token : tokens) {
-                        stats.startToken(token.getStart());
+                        stats.startToken(token.toString(),0);
 
                         List<Fragment> fragments = token.fragments;
                         for (Fragment frag : fragments) {
                             if (count >= startAt) {
 
-                                Duration elapsed = runRepair(keyspace, table.name, frag);
+                                runRepair(keyspace, table.name, frag);
                                 if (error) {
                                     stats = stats.errorRepair();
                                 } else {
@@ -117,7 +117,7 @@ public class RepairResource extends JMXNotificationProgressListener {
                 for (Token token : tokens) {
                     int tokenTotal = token.fragments.size();
                     String name = String.join("/",
-                            Arrays.asList(cluster, keyspace, table.name, token.getStart()));
+                            Arrays.asList(cluster, keyspace, table.name, token.toString()));
                     result.put(name, tokenTotal);
                     tableTotal += tokenTotal;
                 }

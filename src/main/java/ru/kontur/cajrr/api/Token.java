@@ -72,4 +72,8 @@ public class Token {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return getStart();
+    }
 }

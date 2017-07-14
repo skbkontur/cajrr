@@ -1,7 +1,5 @@
 package ru.kontur.cajrr.api;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.kv.model.GetValue;
@@ -13,9 +11,9 @@ import ru.kontur.cajrr.AppConfiguration;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -24,49 +22,24 @@ public class RepairStats {
 
     private final ConsulClient consul;
     private final String statKey;
-    private final MetricRegistry metrics;
     public String cluster;
     public String keyspace;
     public String table;
     public String token;
     public String host;
+    public String lastClusterSuccess = "";
 
     public long ID;
-    public int tableTotal;
-    public int tableCompleted;
-    public int tableErrors;
-    public float tablePercent;
-    public int keyspaceTotal;
-    public int keyspaceCompleted;
-    public int keyspaceErrors;
-    public float keyspacePercent;
-    public int clusterTotal;
-    public int clusterCompleted;
-    public int clusterErrors;
-    public float clusterPercent;
-    public String lastClusterSuccess = "";
-    Duration duration = java.time.Duration.ZERO;
-    Duration tableDuration = java.time.Duration.ZERO;
-    Duration tableAverage = java.time.Duration.ZERO;
-    Duration tableEstimate = java.time.Duration.ZERO;
-    Duration keyspaceDuration = java.time.Duration.ZERO;
-    Duration keyspaceAverage = java.time.Duration.ZERO;
-    Duration keyspaceEstimate = java.time.Duration.ZERO;
-    Duration clusterDuration = java.time.Duration.ZERO;
-    Duration clusterAverage = java.time.Duration.ZERO;
-    Duration clusterEstimate = java.time.Duration.ZERO;
-    private Map<String, Integer> totals;
-    private Meter clusterMeter;
-    private Meter keyspaceMeter;
-    private Meter tableMeter;
-    private Meter tokenMeter;
-    private Meter clusterErrorMeter;
-    private Meter keyspaceErrorMeter;
-    private Meter tableErrorMeter;
-    private Meter tokenErrorMeter;
+    private Meter clusterRepairs;
+    private Meter keyspaceRepairs;
+    private Meter tableRepairs;
+    private Meter tokenRepairs;
+    private int errors;
 
-    public RepairStats(AppConfiguration config, MetricRegistry metrics, Map<String, Integer> totals) {
-        this.metrics = metrics;
+    private Map<String, Integer> totals;
+
+    public RepairStats(AppConfiguration config, Map<String, Integer> totals) {
+        this.totals = totals;
         this.consul = new ConsulClient(config.consul);
         this.statKey = config.statKey;
         host = config.serviceHost;
@@ -77,122 +50,82 @@ public class RepairStats {
     }
 
     public RepairStats errorRepair() {
-        clusterErrorMeter.mark();
-        keyspaceErrorMeter.mark();
-        tableErrorMeter.mark();
-        tokenErrorMeter.mark();
+        errors++;
         return this;
     }
 
     public RepairStats completeRepair()  {
-        clusterMeter.mark();
-        keyspaceMeter.mark();
-        tableMeter.mark();
-        tokenMeter.mark();
-
+        clusterRepairs.mark();
+        keyspaceRepairs.mark();
+        tableRepairs.mark();
+        tokenRepairs.mark();
+        if (clusterRepairs.getPercent()==100) {
+            lastClusterSuccess = Instant.now().toString();
+        }
         return this;
     }
 
-    private void calculatePercents() {
-        clusterPercent = clusterCompleted * 100 / clusterTotal;
-        keyspacePercent = keyspaceCompleted * 100 / keyspaceTotal;
-        tablePercent = tableCompleted * 100 / tableTotal;
-
-        if (clusterPercent == 100) {
-            lastClusterSuccess = LocalDateTime.now().toString();
-        }
-    }
-
-    private void calculateEstimates() {
-        int clusterLeft = clusterTotal - clusterCompleted;
-        int keyspaceLeft = keyspaceTotal - keyspaceCompleted;
-        int tableLeft = tableTotal - tableCompleted;
-
-        clusterEstimate = clusterAverage.multipliedBy(clusterLeft);
-        keyspaceEstimate = keyspaceAverage.multipliedBy(keyspaceLeft);
-        tableEstimate = tableAverage.multipliedBy(tableLeft);
-    }
-
-    private void calculateAverages() {
-        clusterAverage = clusterDuration.dividedBy(clusterCompleted);
-        keyspaceAverage = keyspaceDuration.dividedBy(keyspaceCompleted);
-        tableAverage = tableDuration.dividedBy(tableCompleted);
-    }
-
-    private void incrementErrors() {
-        clusterErrors++;
-        keyspaceErrors++;
-        tableErrors++;
-    }
-
-    private void increaseDurations(Duration elapsed) {
-        clusterDuration = clusterDuration.plus(elapsed);
-        keyspaceDuration = keyspaceDuration.plus(elapsed);
-        tableDuration = tableDuration.plus(elapsed);
-    }
-
     @JsonProperty
-    public String getDuration() {
-        return formatDuration(this.duration);
+    public String getElapsed() {
+        return formatDuration(clusterRepairs.getElapsed());
     }
 
     @JsonProperty
     public String getClusterDuration() {
-        return formatDuration(this.clusterDuration);
+        return formatDuration(clusterRepairs.getDuration());
     }
 
     @JsonProperty
     public String getClusterAverage() {
-        return formatDuration(this.clusterAverage);
+        return formatDuration(this.clusterRepairs.getAverage());
     }
 
     @JsonProperty
     public String getClusterEstimate() {
-        return formatDuration(this.clusterEstimate);
+        return formatDuration(this.clusterRepairs.getEstimate());
     }
 
     @JsonProperty
     public String getKeyspaceDuration() {
-        return formatDuration(this.keyspaceDuration);
+        return formatDuration(this.keyspaceRepairs.getDuration());
     }
 
     @JsonProperty
     public String getKeyspaceAverage() {
-        return formatDuration(this.keyspaceAverage);
+        return formatDuration(this.keyspaceRepairs.getAverage());
     }
 
     @JsonProperty
     public String getKeyspaceEstimate() {
-        return formatDuration(this.keyspaceEstimate);
+        return formatDuration(this.keyspaceRepairs.getEstimate());
     }
 
     @JsonProperty
     public String getTableDuration() {
-        return formatDuration(this.tableDuration);
+        return formatDuration(this.tableRepairs.getDuration());
     }
 
     @JsonProperty
     public String getTableAverage() {
-        return formatDuration(this.tableAverage);
+        return formatDuration(this.tableRepairs.getAverage());
     }
 
     @JsonProperty
     public String getTableEstimate() {
-        return formatDuration(this.tableEstimate);
+        return formatDuration(this.tableRepairs.getEstimate());
     }
 
     public void loadFromJson(String s) {
         try {
             HashMap result = new ObjectMapper().readValue(s, HashMap.class);
             this.cluster = (String) result.get("cluster");
-            this.clusterTotal = (int) result.get("clusterTotal");
-            this.clusterCompleted = (int) result.get("clusterCompleted");
+            startCluster(cluster, (int) result.get("clusterCompleted"));
+
             this.keyspace = (String) result.get("keyspace");
-            this.keyspaceTotal = (int) result.get("keyspaceTotal");
-            this.keyspaceCompleted = (int) result.get("keyspaceCompleted");
+            startKeyspace(keyspace, (int) result.get("keyspaceCompleted"));
+
             this.table = (String) result.get("table");
-            this.tableTotal = (int) result.get("tableTotal");
-            this.tableCompleted = (int) result.get("tableCompleted");
+            startTable(table, (int) result.get("tableCompleted"));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -223,33 +156,43 @@ public class RepairStats {
         return 0;
     }
 
-    public void startCluster(String cluster) {
+    public void startCluster(String cluster, int completed) {
         this.cluster = cluster;
-        String name = MetricRegistry.name("cluster", cluster, "repairs");
-        clusterMeter = metrics.meter(name);
+        clusterRepairs = new Meter(cluster);
+        clusterRepairs.setCompleted(completed);
+        clusterRepairs.setTotal(totals.get(cluster));
+
     }
 
-    public void startKeyspace(String keyspace) {
+    public void startKeyspace(String keyspace, int completed) {
         this.keyspace = keyspace;
-        String name = MetricRegistry.name("keyspace", keyspace, "repairs");
-        keyspaceMeter = metrics.meter(name);
+        keyspaceRepairs = new Meter(keyspace);
+        String name = String.join("/",
+                Arrays.asList(cluster, keyspace));
+        keyspaceRepairs.setCompleted(completed);
+        keyspaceRepairs.setTotal(totals.get(name));
     }
 
     public void initTotalsFromMap(Map<String, Integer> totals) {
         this.totals = totals;
     }
 
-    public void startTable(String table) {
+    public void startTable(String table, int completed) {
         this.table = table;
-        String name = MetricRegistry.name("table", table, "repairs");
-        tableMeter = metrics.meter(name);
+        tableRepairs = new Meter(table);
+        String name = String.join("/",
+                Arrays.asList(cluster, keyspace, table));
+        tableRepairs.setTotal(totals.get(name));
+        tableRepairs.setCompleted(completed);
     }
 
-    public void startToken(String token) {
+    public void startToken(String token, int completed) {
         this.token = token;
-        String name = MetricRegistry.name("token", token, "repairs");
-        tokenMeter = metrics.meter(name);
-
+        tokenRepairs = new Meter(token);
+        String name = String.join("/",
+                Arrays.asList(cluster, keyspace, table, token));
+        tokenRepairs.setTotal(totals.get(name));
+        tokenRepairs.setCompleted(completed);
     }
 
     @Override
