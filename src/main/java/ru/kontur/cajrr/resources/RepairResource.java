@@ -1,5 +1,6 @@
 package ru.kontur.cajrr.resources;
 
+import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.setup.Environment;
 import org.apache.cassandra.repair.RepairParallelism;
 import org.apache.cassandra.repair.messages.RepairOption;
@@ -18,8 +19,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +31,6 @@ public class RepairResource extends JMXNotificationProgressListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepairResource.class);
     private final AppConfiguration config;
-    private final Environment env;
     public TableResource tableResource;
     public RingResource ringResource;
     private AtomicBoolean needToRepair = new AtomicBoolean(true);
@@ -45,10 +43,9 @@ public class RepairResource extends JMXNotificationProgressListener {
     private int progressCount;
     private RepairStats stats;
 
-    public RepairResource(AppConfiguration config, Environment environment) {
+    public RepairResource(AppConfiguration config) {
 
         this.config = config;
-        this.env = environment;
     }
 
     public void run() {
@@ -134,9 +131,8 @@ public class RepairResource extends JMXNotificationProgressListener {
         return result;
     }
 
-    private Duration runRepair(String keyspace, String table, Fragment frag) {
-        Instant start = Instant.now();
-
+    @Timed(name = "repair_duration")
+    private void runRepair(String keyspace, String table, Fragment frag) {
         String endpoint = frag.endpoint;
         String begin = frag.getStart();
         String end = frag.getEnd();
@@ -156,8 +152,6 @@ public class RepairResource extends JMXNotificationProgressListener {
             this.error = true;
             e.printStackTrace();
         }
-        Instant finish = Instant.now();
-        return Duration.between(start, finish);
     }
 
     private Map<String,String> getOptions(String endpoint, String table, String begin, String end) {
@@ -197,9 +191,9 @@ public class RepairResource extends JMXNotificationProgressListener {
     @Override
     public void progress(String s, ProgressEvent event) {
         ProgressEventType type = event.getType();
-        message = event.getMessage();
-        percentage = event.getProgressPercentage();
-        progressCount = event.getProgressCount();
+        stats.message = event.getMessage();
+        stats.percentage = event.getProgressPercentage();
+        stats.progressCount = event.getProgressCount();
 
         switch (type) {
             case COMPLETE:

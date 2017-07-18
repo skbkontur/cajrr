@@ -22,14 +22,13 @@ public class RepairStats {
 
     private final ConsulClient consul;
     private final String statKey;
-    public String cluster;
-    public String keyspace;
-    public String table;
-    public String token;
-    public String host;
-    public String lastClusterSuccess = "";
+    private String cluster;
+    private String keyspace;
+    private String table;
+    private String token;
+    private String host;
+    private String lastClusterSuccess = "";
 
-    public long ID;
     private Meter clusterRepairs;
     private Meter keyspaceRepairs;
     private Meter tableRepairs;
@@ -37,6 +36,9 @@ public class RepairStats {
     private int errors;
 
     private Map<String, Integer> totals;
+    public String message;
+    public double percentage;
+    public int progressCount;
 
     public RepairStats(AppConfiguration config, Map<String, Integer> totals) {
         this.totals = totals;
@@ -115,7 +117,7 @@ public class RepairStats {
         return formatDuration(this.tableRepairs.getEstimate());
     }
 
-    public void loadFromJson(String s) {
+    private void loadFromJson(String s) {
         try {
             HashMap result = new ObjectMapper().readValue(s, HashMap.class);
             this.cluster = (String) result.get("cluster");
@@ -157,6 +159,7 @@ public class RepairStats {
     }
 
     public void startCluster(String cluster, int completed) {
+        this.errors = 0;
         this.cluster = cluster;
         clusterRepairs = new Meter(cluster);
         clusterRepairs.setCompleted(completed);
@@ -204,5 +207,25 @@ public class RepairStats {
             e.printStackTrace();
         }
         return jsonString;
+    }
+
+    @JsonProperty
+    public int getErrors() {
+        return errors;
+    }
+
+    @JsonProperty
+    public String getToken() {
+        return token;
+    }
+
+    @JsonProperty
+    public String getHost() {
+        return host;
+    }
+
+    @JsonProperty
+    public String getLastClusterSuccess() {
+        return lastClusterSuccess;
     }
 }
