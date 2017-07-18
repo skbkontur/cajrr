@@ -82,7 +82,7 @@ public class App extends Application<AppConfiguration>
     }
 
     private void initResources(AppConfiguration configuration, Environment environment) {
-        repairResource = new RepairResource(configuration, environment);
+        repairResource = new RepairResource(configuration);
         ringResource = new RingResource(configuration);
         tableResource = new TableResource(configuration);
 
