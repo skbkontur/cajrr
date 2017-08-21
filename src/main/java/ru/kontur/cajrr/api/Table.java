@@ -10,7 +10,7 @@ public class Table implements Comparable<Table>{
     public long size;
 
     @JsonProperty
-    public int slices;
+    public int slices = 1;
 
     @JsonProperty
     public double weight;
