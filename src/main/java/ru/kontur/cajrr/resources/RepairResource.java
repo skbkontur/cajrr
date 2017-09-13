@@ -95,7 +95,7 @@ public class RepairResource extends JMXNotificationProgressListener {
             try {
                 Thread.sleep(config.interval);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOG.error(e.getMessage());
             }
         }
     }
@@ -150,7 +150,7 @@ public class RepairResource extends JMXNotificationProgressListener {
             }
         } catch (Exception e) {
             this.error = true;
-            LOG.error(e);
+            LOG.error(e.getMessage());
         }
     }
 
