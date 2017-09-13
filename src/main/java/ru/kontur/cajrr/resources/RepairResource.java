@@ -150,7 +150,7 @@ public class RepairResource extends JMXNotificationProgressListener {
             }
         } catch (Exception e) {
             this.error = true;
-            e.printStackTrace();
+            LOG.error(e);
         }
     }
 
