@@ -1,5 +1,5 @@
 VERSION := 2.0
-RELEASE := $(shell git describe --always --tags | awk -F- '{ if ($$2) dot="."} END { printf "%s%s%s\n",$$2,dot,$$3}')
+RELEASE := $(shell git describe --always --tags | awk '{ split($0,a,"-"); printf "%s%s%s\n",a[2],".",a[3]}')
 VENDOR := "SKB Kontur"
 LICENSE := MIT
 URL := https://github.com/skbkontur/cajrr
